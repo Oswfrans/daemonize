@@ -1,0 +1,33 @@
+stages:
+- test
+- dist
+- package
+- deploy
+
+Test:
+  stage: test
+  script:
+  - sbt clean update test
+
+Dist:
+  stage: dist
+  dependencies:
+  - Test
+  script:
+  - sbt 'set test in assembly := {}' dist
+  artifacts:
+    name: "${CI_PROJECT_NAME}_${CI_COMMIT_SHA}"
+    paths:
+    - target/universal/*
+    when: on_success
+  only:
+  - master
+
+Package:
+  stage: package
+  dependencies:
+  - Dist
+  script:
+  - ls
+  only:
+  - master
