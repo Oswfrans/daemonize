@@ -1,0 +1,32 @@
+# SBT
+dist/*
+target/
+lib_managed/
+src_managed/
+project/boot/
+project/plugins/project/
+.history
+.cache
+.lib/
+
+# Scala
+*.class
+*.log
+
+# Playframework
+logs
+/.classpath
+/.project
+/.settings
+/RUNNING_PID
+
+# Mac OS X
+.DS_Store
+
+# IDEA
+*.iml
+*.ipr
+*.iws
+/.idea
+/.idea_modules
+out
