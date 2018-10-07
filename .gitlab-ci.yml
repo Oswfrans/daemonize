@@ -1,20 +1,19 @@
 stages:
 - test
-- dist
 - package
-- deploy
+- containerize
 
 Test:
   stage: test
   script:
   - sbt clean update test
 
-Dist:
-  stage: dist
+Package:
+  stage: package
   dependencies:
   - Test
   script:
-  - sbt 'set test in dist := {}' dist
+  - sbt universal:packageZipTarball
   artifacts:
     name: "${CI_PROJECT_NAME}_${CI_COMMIT_SHA}"
     paths:
@@ -23,11 +22,11 @@ Dist:
   only:
   - master
 
-Package:
-  stage: package
+Containerize:
+  stage: containerize
   dependencies:
-  - Dist
+  - Package
   script:
-  - docker images
+  - docker build -t payvision/${CI_PROJECT_NAME}:latest -t payvision/${CI_PROJECT_NAME}:${CI_COMMIT_SHA} .
   only:
   - master
