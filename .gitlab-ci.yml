@@ -5,6 +5,8 @@ stages:
 
 Test:
   stage: test
+  tags:
+  - docker
   script:
   - sbt clean update test
 
@@ -12,6 +14,8 @@ Package:
   stage: package
   dependencies:
   - Test
+  tags:
+  - docker
   script:
   - sbt universal:packageZipTarball
   artifacts:
@@ -24,6 +28,8 @@ Package:
 
 Containerize:
   stage: containerize
+  tags:
+  - docker
   dependencies:
   - Package
   script:
