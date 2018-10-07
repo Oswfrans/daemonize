@@ -1,5 +1,5 @@
 # Pull base image
-FROM payvision/sbt:1.2.3
+FROM openjdk:8-alpine
 
 # Copy files to temp folder
 COPY --chown=root:root target/universal/*.tgz /tmp/
@@ -17,10 +17,10 @@ RUN \
   rm -rf /tmp/*.tgz
 
 # Exposed port
-EXPOSE 9000/tcp
+EXPOSE 80/tcp
 
 # Define working directory
 WORKDIR /app
 
 # Define executable
-ENTRYPOINT ["/app/bin/ce-optimize-api"]
+ENTRYPOINT ["/app/bin/ce-optimize-api", "-Dhttp.port=80"]
