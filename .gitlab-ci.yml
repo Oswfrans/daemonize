@@ -33,6 +33,7 @@ Containerize:
   dependencies:
   - Package
   script:
+  - docker pull openjdk:8-alpine
   - docker build -t payvision/${CI_PROJECT_NAME}:latest -t payvision/${CI_PROJECT_NAME}:${CI_COMMIT_SHA} .
   only:
   - master

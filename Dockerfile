@@ -1,20 +1,20 @@
 # Pull base image
 FROM openjdk:8-alpine
 
+# Install bash
+RUN apk update && apk --no-cache --update add bash
+
 # Copy files to temp folder
 COPY --chown=root:root target/universal/*.tgz /tmp/
 
 # Make app directory
-RUN \
-  mkdir -p /app
+RUN mkdir -p /app
 
 # Unzip file
-RUN \
-  tar -C /app -xf /tmp/*.tgz --strip-components=1
+RUN tar -C /app -xf /tmp/*.tgz --strip-components=1
 
 # Clean up
-RUN \
-  rm -rf /tmp/*.tgz
+RUN rm -rf /tmp/*.tgz
 
 # Exposed port
 EXPOSE 80/tcp
