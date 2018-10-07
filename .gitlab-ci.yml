@@ -14,7 +14,7 @@ Dist:
   dependencies:
   - Test
   script:
-  - sbt 'set test in assembly := {}' dist
+  - sbt 'set test in dist := {}' dist
   artifacts:
     name: "${CI_PROJECT_NAME}_${CI_COMMIT_SHA}"
     paths:
@@ -28,6 +28,6 @@ Package:
   dependencies:
   - Dist
   script:
-  - ls
+  - docker images
   only:
   - master
