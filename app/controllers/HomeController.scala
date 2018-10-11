@@ -28,4 +28,9 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       case JsError(_) => BadRequest("Invalid Input!")
     }
   }
+
+  def healthz() = Action {
+    Ok("Healthy")
+  }
+
 }

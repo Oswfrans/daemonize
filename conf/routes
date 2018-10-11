@@ -5,3 +5,5 @@
 
 # An example controller showing a sample home page
 POST     /                           controllers.HomeController.index
+
+GET      /healthz                    controllers.HomeController.healthz
