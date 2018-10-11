@@ -46,6 +46,7 @@ Publish:
   dependencies:
   - Containerize
   script:
+  - docker login -u ${DOCKERREG_USERNAME} -p ${DOCKERREG_PASSWORD} dockreg.adam.payvision
   - docker push dockreg.adam.payvision/${CI_PROJECT_NAME}:latest
   - docker push dockreg.adam.payvision/${CI_PROJECT_NAME}:${CI_COMMIT_SHA} .
   only:
