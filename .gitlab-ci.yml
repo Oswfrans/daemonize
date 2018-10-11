@@ -2,6 +2,7 @@ stages:
 - test
 - package
 - containerize
+- publish
 
 Test:
   stage: test
@@ -34,6 +35,18 @@ Containerize:
   - Package
   script:
   - docker pull openjdk:8-alpine
-  - docker build -t payvision/${CI_PROJECT_NAME}:latest -t payvision/${CI_PROJECT_NAME}:${CI_COMMIT_SHA} .
+  - docker build -t dockreg.adam.payvision/${CI_PROJECT_NAME}:latest -t dockreg.adam.payvision/${CI_PROJECT_NAME}:${CI_COMMIT_SHA} .
+  only:
+  - master
+
+Publish:
+  stage: publish
+  tags:
+  - docker
+  dependencies:
+  - Containerize
+  script:
+  - docker push dockreg.adam.payvision/${CI_PROJECT_NAME}:latest
+  - docker push dockreg.adam.payvision/${CI_PROJECT_NAME}:${CI_COMMIT_SHA} .
   only:
   - master
