@@ -19,9 +19,15 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
   Helpers.stubControllerComponents(
     playBodyParsers = Helpers.stubPlayBodyParsers(materializer)
   )
-  @transient private val request = FakeRequest(POST, "/").withBody(Json.obj())
+  private val testJson = Json.obj(
+    "firstsixdigits" -> "123456",
+    "cvvresponse" -> "123",
+    "internalamount" -> 456,
+    "mid" -> "7900"
+  )
+  @transient private val request = FakeRequest(POST, "/").withBody(testJson)
 
-  "HomeController GET" should {
+  "HomeController POST" should {
 
     "render the index page from a new instance of controller" in {
       val controller = new HomeController(stubControllerComponents())
