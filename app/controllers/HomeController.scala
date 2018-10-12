@@ -1,9 +1,14 @@
 package controllers
 
 import javax.inject._
-import models.{Input, Output}
+import ml.combust.bundle.BundleFile
+import ml.combust.mleap.runtime.frame.DefaultLeapFrame
+import ml.combust.mleap.runtime.MleapSupport._
+import models.{OriginalTransaction, ModifiedTransaction}
 import play.api.libs.json._
 import play.api.mvc._
+import resource._
+
 
 /**
  * This controller creates an `Action` to handle HTTP requests to the
@@ -13,17 +18,20 @@ import play.api.mvc._
 class HomeController @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
 
   def index(): Action[JsValue] = Action(parse.tolerantJson) { implicit request: Request[JsValue] =>
-    request.body.validate[Input] match {
-      case success: JsSuccess[Input] =>
-        val input = success.value
+    request.body.validate[OriginalTransaction] match {
+      case success: JsSuccess[OriginalTransaction] =>
+        val mlModelPath = this.getClass.getClassLoader.getResource("ml-model.zip").getPath
+        val zipBundleM = (for(bundle <- managed(BundleFile(s"jar:file:$mlModelPath"))) yield {
+          bundle.loadMleapBundle().get
+        }).opt.get
+        val mleapPipeline = zipBundleM.root
 
-        if (input.mcc.nonEmpty || input.cvv.nonEmpty) {
-          val json = Json.toJson(Output(continue = true, input.mcc, input.cvv))
-          Ok(json).as(JSON)
-        } else {
-          val json = Json.toJson(Output(continue = false, None, None))
-          Ok(json).as(JSON)
-        }
+        val input = success.value
+        val frame = DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input)))
+        val transform = mleapPipeline.transform(frame).get
+        val result = transform.dataset.head
+
+        Ok(Json.toJson(ModifiedTransaction(result))).as(JSON)
 
       case JsError(_) => BadRequest("Invalid Input!")
     }
