@@ -6,6 +6,7 @@ import play.api.libs.functional.syntax._
 
 
 case class ModifiedTransaction(continue: Boolean,
+                               mcccode: String,
                                probability: Double,
                                prediction: Double)
 
@@ -14,15 +15,17 @@ object ModifiedTransaction {
 
   implicit val outputWrites: Writes[ModifiedTransaction] = (
     (JsPath \ "continue").write[Boolean] and
+      (JsPath \ "mcccode").write[String] and
       (JsPath \ "probability").write[Double] and
       (JsPath \ "prediction").write[Double]
     )(unlift(ModifiedTransaction.unapply))
 
   def apply(row: Row): ModifiedTransaction = {
     val continue = true
+    val mmcCode = row.getString(21)
     val probability = row.getTensor[Double](182).rawValues.head
     val prediction = row.getDouble(183)
-    new ModifiedTransaction(continue, probability, prediction)
+    new ModifiedTransaction(continue, mmcCode, probability, prediction)
   }
 }
 
