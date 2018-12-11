@@ -18,6 +18,13 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
     request.body.validate[OriginalTransaction] match {
       case success: JsSuccess[OriginalTransaction] =>
         val input = success.value
+
+        //Feature Expansio
+
+        //Candidate Generation
+
+        //ETC
+
         val frame = DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input)))
         val transform = mleapPipeline.transform(frame).get
         val result = transform.dataset.head
