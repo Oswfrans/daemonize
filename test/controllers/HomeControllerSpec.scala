@@ -30,11 +30,11 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
   private val mleapPipeline = zipBundleM.root
 
   //will need to expand and update these tests
-  private val testJson = Json.obj("Retry" -> "CurrentRank" -> 3.0,
-    "OriginalTransaction" -> "InternalAmount" -> 55.0,
-    "OriginalTransaction" -> "Card" -> "AvsThere" -> "true",
-    "OriginalTransaction" -> "Card" -> "BinInfo" -> "IsCommercial" -> "true",
-      "OriginalTransaction" -> "Merchant" ->  "CategoryCodeGroup" -> "7995"
+  private val testJson = Json.obj("Retry" -> Json.obj( "CurrentRank" ->  JsNumber(3.0) )
+    //"OriginalTransaction" -> "InternalAmount" -> 55.0,
+    //"OriginalTransaction" -> "Card" -> "AvsThere" -> "true",
+    //"OriginalTransaction" -> "Card" -> "BinInfo" -> "IsCommercial" -> "true",
+    //  "OriginalTransaction" -> "Merchant" ->  "CategoryCodeGroup" -> "7995"
   )
   //Json.obj("firstsixdigits" -> "123456", "cvvresponse" -> "123", "internalamount" -> 456, "mid" -> "7900" )
 
