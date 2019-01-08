@@ -29,12 +29,15 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
   }).opt.get
   private val mleapPipeline = zipBundleM.root
 
-  private val testJson = Json.obj(
-    "firstsixdigits" -> "123456",
-    "cvvresponse" -> "123",
-    "internalamount" -> 456,
-    "mid" -> "7900"
+  //will need to expand and update these tests
+  private val testJson = Json.obj("Retry" -> "CurrentRank" -> 3.0,
+    "OriginalTransaction" -> "InternalAmount" -> 55.0,
+    "OriginalTransaction" -> "Card" -> "AvsThere" - > "true",
+    "OriginalTransaction" -> "Card" -> "BinInfo" -> "IsCommercial" -> "true",
+      "OriginalTransaction" -> "Merchant" ->  "CategoryCodeGroup" -> "7995"
   )
+  //Json.obj("firstsixdigits" -> "123456", "cvvresponse" -> "123", "internalamount" -> 456, "mid" -> "7900" )
+
   @transient private val request = FakeRequest(POST, "/").withBody(testJson)
 
 
@@ -46,7 +49,7 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
 
       status(home) mustBe OK
       contentType(home) mustBe Some("application/json")
-      contentAsString(home) must include ("continue")
+      contentAsString(home) must include ("IsApplicable")
     }
 
     "render the index page from the application" in {
@@ -55,7 +58,7 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
 
       status(home) mustBe OK
       contentType(home) mustBe Some("application/json")
-      contentAsString(home) must include ("continue")
+      contentAsString(home) must include ("IsApplicable")
     }
 
     "render the index page from the router" in {
@@ -63,7 +66,7 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
 
       status(home) mustBe OK
       contentType(home) mustBe Some("application/json")
-      contentAsString(home) must include ("continue")
+      contentAsString(home) must include ("IsApplicable")
     }
   }
 }
