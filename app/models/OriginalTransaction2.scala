@@ -1,19 +1,34 @@
+/***
 package models
 
 import ml.combust.mleap.core.types.{ScalarType, StructField, StructType}
 import ml.combust.mleap.runtime.frame.Row
-
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 
 //possible solution, probably not
-//import ai.x.play.json._
-//import ai.x.play.json.Jsonx
-import julienrf.json.derived
+import ai.x.play.json.Jsonx
+
+
+case class OriginalCard( expirymonth: Double,
+                         expiryyear: Double,
+                         cv2resulttype: String, //
+                         cv2response: String, //
+                         avsthere: String,
+                         cardschemaid: String,
+                         servicetypeid: String,
+                         cardcommercial: String,
+                         cardprepaid: String,
+                         issuercode: String,
+                         issuercountrycode: String)
+
+case class OriginalMerchant(merchantcountrycode: String,
+                             mcc: String,
+                             mid: String ) //Memberid ??)
 
 case class OriginalTransaction(currentrank: Double,
                                previousresponsecode: String,
-                               //previousretryoptimizations, as what should we represent this?
+                              //previousretryoptimizations, as what should we represent this?
                                internalamount: Double,
                                initialrecurring: Boolean,
                                authdatetime: String,
@@ -22,31 +37,30 @@ case class OriginalTransaction(currentrank: Double,
                                eci: String,
                                currencyid: String,
 
-                               //cardinfo : OriginalCard,
+                               cardinfo : OriginalCard,
 
-                               expirymonth: Double,
-                               expiryyear: Double,
-                               cv2resulttype: String, //
-                               cv2response: String, //
-                               avsthere: String,
-                               cardschemaid: String,
-                               servicetypeid: String,
-                               cardcommercial: String,
-                               cardprepaid: String,
-                               issuercode: String,
-                               issuercountrycode: String,
+                               //expirymonth: Double,
+                               //expiryyear: Double,
+                               //cv2resulttype: String, //
+                               //cv2response: String, //
+                               //avsthere: String,
+                               //cardschemaid: String,
+                               //servicetypeid: String,
+                               //cardcommercial: String,
+                               //cardprepaid: String,
+                               //issuercode: String,
+                               //issuercountrycode: String,
 
-                               //merchantinfo : OriginalMerchant
+                              merchantinfo : OriginalMerchant
 
-                               merchantcountrycode: String,
-                               mcc: String,
-                               mid: String //Memberid ??
+                               //merchantcountrycode: String,
+                               //mcc: String,
+                               //mid: String //Memberid ??
                               )
 
 object OriginalTransaction {
 
   implicit val inputReads: Reads[OriginalTransaction] = (
-
     (JsPath \ "Retry" \ "CurrentRank").read[Double] and
       (JsPath \ "Retry" \ "PreviousResponseCode").read[String] and
 
@@ -58,6 +72,7 @@ object OriginalTransaction {
       (JsPath \ "OriginalTransaction" \ "Eci").read[String] and
       (JsPath \ "OriginalTransaction" \ "CurrencyId").read[String] and
 
+      (
       (JsPath \ "Card" \ "ExpiryMonth").read[Double] and
       (JsPath \ "Card" \ "ExpiryYear").read[Double] and
       (JsPath \ "Card" \ "Cv2ResultType").read[String] and
@@ -70,10 +85,15 @@ object OriginalTransaction {
       (JsPath \ "Card" \ "BinInfo" \ "IsPrepaid").read[String] and
       (JsPath \ "Card" \"BinInfo" \  "IssuerCode").read[String] and
       (JsPath \ "Card" \ "BinInfo" \  "CountryCode").read[String] and
+        )(OriginalCard.apply _)
 
+      and
+
+        (
       (JsPath \ "Merchant" \ "CountryCode").read[String] and
       (JsPath \ "Merchant" \ "CategoryCodeGroup").read[String] and
       (JsPath \ "Merchant" \ "MemberId").read[String]
+        ) (OriginalMerchant.apply _)
 
     )(OriginalTransaction.apply _)
 
@@ -378,3 +398,5 @@ Input model in MLeap
 93 StructField(channelchange,StringType,true)
 94 StructField(doublelabel,DoubleType,false)
  */
+
+  */

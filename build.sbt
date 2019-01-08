@@ -12,5 +12,8 @@ unmanagedResourceDirectories in Compile += { baseDirectory.value / "mleap" }
 libraryDependencies ++= Seq(
   guice,
   "ml.combust.mleap" %% "mleap-runtime" % "0.12.0",
-  "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % Test
+  "ai.x" %% "play-json-extensions" % "0.10.0",
+  "org.julienrf" %% "play-json-derived-codecs" % "4.0.1",
+"org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % Test
+
 )

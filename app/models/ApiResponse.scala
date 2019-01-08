@@ -4,30 +4,39 @@ import ml.combust.mleap.runtime.frame.Row
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 
+//case class Optimization()
+case class ApiResponse(IsApplicable: Boolean, channel: String, removeThreed : String)
+// Optimizations: Seq[Optimization] )
 
-//should change the name of this to something like apiResponse
+object ApiResponse {
 
-case class ModifiedTransaction(continue: Boolean,
-                               mcccode: String,
-                               probability: Double,
-                               prediction: Double)
+  implicit val outputWrites: Writes[ApiResponse] = (
+    (JsPath \ "IsApplicable").write[Boolean] and
+      //(JsPath \ "IsApplicable").write[Boolean]
+    (JsPath \ "Optimizations" \ "channel").write[String] and
+    (JsPath \ "Optimizations" \ "removeThreed").write[String]
+    )(unlift(ApiResponse.unapply))
 
+  def apply(indicator: Int): ApiResponse = {
+    //val continue = true
+    //val mmcCode = row.getString(21)
+    //val probability = row.getTensor[Double](182).rawValues.head
+    //val prediction = row.getDouble(183)
 
-object ModifiedTransaction {
+    indicator match {
+      case 1 =>
+        new ApiResponse(true, "","")
 
-  implicit val outputWrites: Writes[ModifiedTransaction] = (
-    (JsPath \ "continue").write[Boolean] and
-      (JsPath \ "mcccode").write[String] and
-      (JsPath \ "probability").write[Double] and
-      (JsPath \ "prediction").write[Double]
-    )(unlift(ModifiedTransaction.unapply))
+      case 2 =>
+        new ApiResponse(true, "2", "" )
 
-  def apply(row: Row): ModifiedTransaction = {
-    val continue = true
-    val mmcCode = row.getString(21)
-    val probability = row.getTensor[Double](182).rawValues.head
-    val prediction = row.getDouble(183)
-    new ModifiedTransaction(continue, mmcCode, probability, prediction)
+      case 3 =>
+        new ApiResponse(true, "1", "true" )
+
+      case 4 =>
+        new ApiResponse(true, "2", "true")
+    }
+
   }
 }
 
