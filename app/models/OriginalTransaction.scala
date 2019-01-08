@@ -9,8 +9,42 @@ import play.api.libs.functional.syntax._
 //possible solution, probably not
 //import ai.x.play.json._
 //import ai.x.play.json.Jsonx
-import julienrf.json.derived
+//import julienrf.json.derived
 
+case class OriginalCard( expirymonth: Double,
+                         expiryyear: Double,
+                         cv2resulttype: String, //
+                         cv2response: String, //
+                         avsthere: String,
+                         cardschemaid: String,
+                         servicetypeid: String,
+                         cardcommercial: String,
+                         cardprepaid: String,
+                         issuercode: String,
+                         issuercountrycode: String)
+
+case class OriginalMerchant(merchantcountrycode: String,
+                            mcc: String,
+                            mid: String ) //Memberid ??)
+
+case class OriginalInfo(currentrank: Double,
+                        previousresponsecode: String,
+                        //previousretryoptimizations, as what should we represent this?
+                        internalamount: Double,
+                        initialrecurring: String,
+                        authdatetime: String,
+                        transactiontypeid: String,
+                        channel: String,
+                        eci: String,
+                        currencyid: String)
+
+case class OriginalTransaction(card: OriginalCard,
+                               merchant: OriginalMerchant,
+                               info: OriginalInfo)
+
+
+
+/*
 case class OriginalTransaction(currentrank: Double,
                                previousresponsecode: String,
                                //previousretryoptimizations, as what should we represent this?
@@ -42,11 +76,55 @@ case class OriginalTransaction(currentrank: Double,
                                mcc: String,
                                mid: String //Memberid ??
                               )
+*/
 
 object OriginalTransaction {
 
-  implicit val inputReads: Reads[OriginalTransaction] = (
+  implicit val cardFormat : Format[OriginalCard] =     //Json.format[OriginalCard]
+    (
+      (JsPath \ "OriginalTransaction" \  "Card" \ "ExpiryMonth").format[Double] and
+        (JsPath \ "OriginalTransaction" \  "Card" \ "ExpiryYear").format[Double] and
+        (JsPath \ "OriginalTransaction" \  "Card" \ "Cv2ResultType").format[String] and
+        (JsPath \ "OriginalTransaction" \  "Card" \ "Cv2Reponse").format[String] and
+        (JsPath \ "OriginalTransaction" \  "Card" \ "AvsThere").format[String] and
 
+        (JsPath \ "OriginalTransaction" \  "Card" \ "BinInfo" \ "CardSchemaId").format[String] and
+        (JsPath \ "OriginalTransaction" \  "Card" \ "BinInfo" \"ServiceTypeId").format[String] and
+        (JsPath \ "OriginalTransaction" \  "Card" \ "BinInfo" \ "IsCommercial").format[String] and
+        (JsPath \ "OriginalTransaction" \  "Card" \ "BinInfo" \ "IsPrepaid").format[String] and
+        (JsPath \ "OriginalTransaction" \  "Card" \"BinInfo" \  "IssuerCode").format[String] and
+        (JsPath \ "OriginalTransaction" \  "Card" \ "BinInfo" \  "CountryCode").format[String]
+      ) (OriginalCard.apply, unlift(OriginalCard.unapply))
+
+  implicit val merchantFormat : Format[OriginalMerchant] = //Json.format[OriginalMerchant]
+    (
+      (JsPath \ "OriginalTransaction" \  "Merchant" \ "CountryCode").format[String] and
+        (JsPath \ "OriginalTransaction" \  "Merchant" \ "CategoryCodeGroup").format[String] and
+        (JsPath \"OriginalTransaction" \   "Merchant" \ "MemberId").format[String]
+    ) (OriginalMerchant.apply, unlift(OriginalMerchant.unapply))
+
+  implicit val infoFormat : Format[OriginalInfo] = //Json.format[OriginalInfo]
+    (
+  (JsPath \ "Retry" \ "CurrentRank").format[Double] and
+    (JsPath \ "Retry" \ "PreviousResponseCode").format[String] and
+
+  (JsPath \ "OriginalTransaction" \ "InternalAmount").format[Double] and
+    (JsPath \ "OriginalTransaction" \ "InitialRecurring").format[String] and
+    (JsPath \ "OriginalTransaction" \ "AuthDateTime").format[String] and
+    (JsPath \ "OriginalTransaction" \ "TransactionTypeId").format[String] and
+    (JsPath \ "OriginalTransaction" \ "Channel").format[String] and
+    (JsPath \ "OriginalTransaction" \ "Eci").format[String] and
+    (JsPath \ "OriginalTransaction" \ "CurrencyId").format[String]
+      ) (OriginalInfo.apply, unlift(OriginalInfo.unapply))
+
+  implicit val inputForm : Format[OriginalTransaction] = (
+    (JsPath).format[OriginalCard] and
+      (JsPath).format[OriginalMerchant] and
+      (JsPath).format[OriginalInfo]
+    ) (OriginalTransaction.apply, unlift(OriginalTransaction.unapply))
+
+  /*
+  implicit val inputReads: Reads[OriginalTransaction] = (
     (JsPath \ "Retry" \ "CurrentRank").read[Double] and
       (JsPath \ "Retry" \ "PreviousResponseCode").read[String] and
 
@@ -76,6 +154,7 @@ object OriginalTransaction {
       (JsPath \ "Merchant" \ "MemberId").read[String]
 
     )(OriginalTransaction.apply _)
+*/
 
   val schema: StructType = StructType(
     StructField("approvalcode", ScalarType.String),
@@ -133,7 +212,7 @@ object OriginalTransaction {
     StructField("cardexpirydate", ScalarType.String),
     StructField("succeeded", ScalarType.String),
     StructField("succeededrank", ScalarType.String),
-    StructField("rank", ScalarType.String),
+    StructField("rank", ScalarType.Double ),  //ScalarType.String),
     StructField("respcodeprevious", ScalarType.String),
     StructField("cv2resultprevious", ScalarType.String),
     StructField("issuerprevious", ScalarType.String),
@@ -180,37 +259,37 @@ object OriginalTransaction {
   def toRow(origTrx: OriginalTransaction): Row = {
     Row(
       "1",                        // approvalcode
-      origTrx.currencyid,                    // originalcurrencyid
-      origTrx.internalamount,                // internalamount
-      origTrx.authdatetime.substring(0,10),  // authdate
+      origTrx.info.currencyid,                    // originalcurrencyid
+      origTrx.info.internalamount,                // internalamount
+      origTrx.info.authdatetime.substring(0,10),  // authdate
       "1",                        // authtimestamp
       "1",                        // authresult
-      origTrx.transactiontypeid,             // transactiontypeid
+      origTrx.info.transactiontypeid,             // transactiontypeid
       "1",                        // cardid
       "1",                        // merchantaccountid
       "1",                        // memberid
       "1",                        // transactionoriginatorid
       "1",                        // detailedcode
       "1",     // firstsixdigits
-      origTrx.cv2response,                  // cvvresponse
+      origTrx.card.cv2response,                  // cvvresponse
       "1",                        // authorizationtypeid
-      origTrx.channel ,                     // channel
+      origTrx.info.channel ,                     // channel
       "1",                        // channelsubtype
-      origTrx.initialrecurring,             // initialrecurring
-      origTrx.merchantcountrycode,          // merchantcountrycode
+      origTrx.info.initialrecurring,             // initialrecurring
+      origTrx.merchant.merchantcountrycode,          // merchantcountrycode
       "1",                        // originalauthenticationindicator
       "1",                        // authenticationvalue
-      origTrx.mid,                // mid
+      origTrx.merchant.mid,                // mid
       "1",                        // processorid
-      origTrx.mcc,                        // categorycodegroup
+      origTrx.merchant.mcc,                        // categorycodegroup
       "1",   // cardbrand
-      origTrx.issuercountrycode,          // issuercountrycode
-      origTrx.issuercode,                 // issuercode
+      origTrx.card.issuercountrycode,          // issuercountrycode
+      origTrx.card.issuercode,                 // issuercode
       "1",   // cardusageid
       "1",   // cardsubtypeid
       "1",   // issuertypeid
-      origTrx.cardcommercial,             // cardcommercial
-      origTrx.cardprepaid,                // cardprepaid
+      origTrx.card.cardcommercial,             // cardcommercial
+      origTrx.card.cardprepaid,                // cardprepaid
       "1",   // originalbin
       "1",   // authweekofyear
       "1",   // authhour
@@ -231,11 +310,11 @@ object OriginalTransaction {
       "1",   // authmonth
       "1",   // authday
       "1",   // threeD
-      origTrx.expiryyear.toString.concat("-").concat(origTrx.expirymonth.toString) ,   // cardexpirydate NEED to asses proper format
+      "1",//origTrx.card.expiryyear.toString.concat("-").concat(origTrx.card.expirymonth.toString) ,   // cardexpirydate NEED to asses proper format
       "1",   // succeeded
       "1",   // succeededrank
-      origTrx.currentrank,                // rank
-      origTrx.previousresponsecode,       // respcodeprevious
+      origTrx.info.currentrank,                // rank
+      origTrx.info.previousresponsecode,       // respcodeprevious
       "1",   // cv2resultprevious
       "1",   // issuerprevious
       "1",   // threedprevious
@@ -258,7 +337,7 @@ object OriginalTransaction {
       "1",   // authorizationtypeidfirst
       "1",   // categorycodegroupfirst
       "1",   // cv2resultfirst
-      origTrx.avsthere,                 // avsthere
+      origTrx.card.avsthere,                 // avsthere
       "1",   // cv2there
       "1",   // expthere
       "1",   // threedthere

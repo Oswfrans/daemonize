@@ -34,7 +34,9 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
         val transform = mleapPipeline.transform(frame).get
 
         val result = transform.dataset.head
-        val predictResultVal = result.getDouble(183) //current model has 183 values, change when we change schema
+
+        //try to see if stringcast error is here
+        //val predictResultVal = result.getAs[Double](183) //getDouble(183) //current model has 183 values, change when we change schema
 
         //based on the result we get we pass something to modifiedTransaction
 
@@ -46,7 +48,8 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
           Ok(Json.toJson(ApiResponse(changes))).as(JSON)
         //Ok(Json.toJson(ModifiedTransaction(result))).as(JSON)
 
-      case JsError(_) => BadRequest("Invalid Input!")
+      case e : JsError => BadRequest("Errors: " + JsError.toJson(e) ) //.toString())
+      //case JsError(_) => BadRequest("Invalid Input!")
     }
   }
 
