@@ -32,7 +32,7 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
   //will need to expand and update these tests
   private val testJson = Json.obj("Retry" -> "CurrentRank" -> 3.0,
     "OriginalTransaction" -> "InternalAmount" -> 55.0,
-    "OriginalTransaction" -> "Card" -> "AvsThere" - > "true",
+    "OriginalTransaction" -> "Card" -> "AvsThere" -> "true",
     "OriginalTransaction" -> "Card" -> "BinInfo" -> "IsCommercial" -> "true",
       "OriginalTransaction" -> "Merchant" ->  "CategoryCodeGroup" -> "7995"
   )
