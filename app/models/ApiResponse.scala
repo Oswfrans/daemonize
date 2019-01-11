@@ -24,16 +24,16 @@ object ApiResponse {
     //val prediction = row.getDouble(183)
 
     indicator match {
-      case 1 =>
+      case 0 =>
         new ApiResponse(true, "","")
 
-      case 2 =>
+      case 1 =>
         new ApiResponse(true, "2", "" )
 
-      case 3 =>
+      case 2 =>
         new ApiResponse(true, "1", "true" )
 
-      case 4 =>
+      case 3 =>
         new ApiResponse(true, "2", "true")
     }
 
