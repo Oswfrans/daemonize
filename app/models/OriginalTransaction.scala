@@ -32,7 +32,6 @@ case class OriginalCard( expirymonth: Double,
                          productcode : String,
                          productsubcode : String,
                          brandcode : String,
-                         issuercode: String,
 
                          issuercountrycode: String)
 
@@ -81,7 +80,6 @@ object OriginalTransaction {
         (JsPath \ "OriginalTransaction" \  "Card" \"BinInfo" \  "ProductCode").format[String] and
         (JsPath \ "OriginalTransaction" \  "Card" \"BinInfo" \  "ProductSubCode").format[String] and
         (JsPath \ "OriginalTransaction" \  "Card" \"BinInfo" \  "BrandCode").format[String] and
-        (JsPath \ "OriginalTransaction" \  "Card" \"BinInfo" \  "IssuerCode").format[String] and
 
         (JsPath \ "OriginalTransaction" \  "Card" \ "BinInfo" \  "CountryCode").format[String]
       ) (OriginalCard.apply, unlift(OriginalCard.unapply))
