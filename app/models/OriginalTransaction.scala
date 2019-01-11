@@ -111,39 +111,6 @@ object OriginalTransaction {
       (JsPath).format[OriginalInfo]
     ) (OriginalTransaction.apply, unlift(OriginalTransaction.unapply))
 
-  /*
-  implicit val inputReads: Reads[OriginalTransaction] = (
-    (JsPath \ "Retry" \ "CurrentRank").read[Double] and
-      (JsPath \ "Retry" \ "PreviousResponseCode").read[String] and
-
-      (JsPath \ "OriginalTransaction" \ "InternalAmount").read[Double] and
-      (JsPath \ "OriginalTransaction" \ "InitialRecurring").read[Boolean] and
-      (JsPath \ "OriginalTransaction" \ "AuthDateTime").read[String] and
-      (JsPath \ "OriginalTransaction" \ "TransactionTypeId").read[String] and
-      (JsPath \ "OriginalTransaction" \ "Channel").read[String] and
-      (JsPath \ "OriginalTransaction" \ "Eci").read[String] and
-      (JsPath \ "OriginalTransaction" \ "CurrencyId").read[String] and
-
-      (JsPath \ "Card" \ "ExpiryMonth").read[Double] and
-      (JsPath \ "Card" \ "ExpiryYear").read[Double] and
-      (JsPath \ "Card" \ "Cv2ResultType").read[String] and
-      (JsPath \ "Card" \ "Cv2Reponse").read[String] and
-      (JsPath \ "Card" \ "AvsThere").read[String] and
-
-      (JsPath \ "Card" \ "BinInfo" \ "CardSchemaId").read[String] and
-      (JsPath \ "Card" \ "BinInfo" \"ServiceTypeId").read[String] and
-      (JsPath \ "Card" \ "BinInfo" \ "IsCommercial").read[String] and
-      (JsPath \ "Card" \ "BinInfo" \ "IsPrepaid").read[String] and
-      (JsPath \ "Card" \"BinInfo" \  "IssuerCode").read[String] and
-      (JsPath \ "Card" \ "BinInfo" \  "CountryCode").read[String] and
-
-      (JsPath \ "Merchant" \ "CountryCode").read[String] and
-      (JsPath \ "Merchant" \ "CategoryCodeGroup").read[String] and
-      (JsPath \ "Merchant" \ "MemberId").read[String]
-
-    )(OriginalTransaction.apply _)
-*/
-
   val schema: StructType = StructType(
     StructField("approvalcode", ScalarType.String),
     StructField("originalcurrencyid", ScalarType.String),

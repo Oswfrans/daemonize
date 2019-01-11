@@ -25,10 +25,8 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
         if ( OriginalTransaction.toRow(input, 0).getDouble(55) < 3.0 ) {
 
           // 0 normal txn
-          // 1 channel moto (channel 2, channelchange 1)
+          // 1 channel moto (channel 2, channelchange 1 and hreed 0 and threedchange 1 )
           // 2 remove threed (threed 0 and threedchange 1)
-          // 3 channel moto and remove threed (combo see above)
-          //does changing the channel also remove 3d? double check with Joao
 
           //if needed I can just ugly create different toRow methods that do the candidate generation
 
@@ -39,21 +37,18 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
           //edit the row object
           val frame2 = DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, 1)))
           val frame3 = DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, 2)))
-          val frame4 = DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, 3)))
 
           val transform = mleapPipeline.transform(frame).get
           val transform2 = mleapPipeline.transform(frame2).get
           val transform3 = mleapPipeline.transform(frame3).get
-          val transform4 = mleapPipeline.transform(frame4).get
 
           val result = transform.dataset.head
           val result2 = transform2.dataset.head
           val result3 = transform3.dataset.head
-          val result4 = transform4.dataset.head
 
           //using index of and max way to determine what to do due to it being both fast and concise
 
-          val resultArray = List(result.getAs[Double](183), result2.getAs[Double](183), result3.getAs[Double](183), result4.getAs[Double](183))
+          val resultArray = List(result.getAs[Double](183), result2.getAs[Double](183), result3.getAs[Double](183) )
           val testArray = List(result.getAs[Double](183), 0.01, 0.02, 0.03)
 
           resultArray.indexOf(resultArray.max) match {
@@ -69,9 +64,9 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
               val changes = 2
               Ok(Json.toJson(ApiResponse(changes))).as(JSON)
 
-            case 3 =>
-              val changes = 3
-              Ok(Json.toJson(ApiResponse(changes))).as(JSON)
+            //case 3 =>
+            // val changes = 3
+            //  Ok(Json.toJson(ApiResponse(changes))).as(JSON)
           }
         }
         else {

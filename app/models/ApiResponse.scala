@@ -28,13 +28,13 @@ object ApiResponse {
         new ApiResponse(true, "","")
 
       case 1 =>
-        new ApiResponse(true, "2", "" )
+        new ApiResponse(true, "2", "true" )
 
       case 2 =>
         new ApiResponse(true, "1", "true" )
 
-      case 3 =>
-        new ApiResponse(true, "2", "true")
+      //case 3 =>
+      //  new ApiResponse(true, "2", "true")
     }
 
   }
