@@ -32,6 +32,7 @@ case class OriginalCard( expirymonth: Double,
                          productcode : String,
                          productsubcode : String,
                          brandcode : String,
+                         issuercode: String,
 
                          issuercountrycode: String)
 
