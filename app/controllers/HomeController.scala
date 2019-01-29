@@ -6,6 +6,13 @@ import models.{ApiResponse, OriginalTransaction, ModifiedTransaction}
 import play.api.libs.json._
 import play.api.mvc._
 
+import org.etcd4s.{Etcd4sClientConfig, Etcd4sClient}
+import org.etcd4s.implicits._
+import org.etcd4s.formats.Formats._
+import org.etcd4s.pb.etcdserverpb._
+
+import scala.concurrent.ExecutionContext.Implicits.global
+
 
 /**
  * This controller creates an `Action` to handle HTTP requests to the
@@ -18,6 +25,8 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
     request.body.validate[OriginalTransaction] match {
       case success: JsSuccess[OriginalTransaction] =>
         val input = success.value
+
+
 
         //generate different candidate transactions here
         //we generate the default transaction if the currentrank is not too high
@@ -95,4 +104,9 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
     Ok("Healthy")
   }
 
+  /*
+  def etcd() = Action {
+    Ok(currentValue)
+  }
+*/
 }

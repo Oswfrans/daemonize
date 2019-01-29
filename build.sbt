@@ -14,6 +14,7 @@ libraryDependencies ++= Seq(
   "ml.combust.mleap" %% "mleap-runtime" % "0.12.0",
   "ai.x" %% "play-json-extensions" % "0.10.0",
   "org.julienrf" %% "play-json-derived-codecs" % "4.0.1",
-"org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % Test
+  "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % Test,
+  "com.github.mingchuno" %% "etcd4s-core" % "0.1.4"
 
 )
