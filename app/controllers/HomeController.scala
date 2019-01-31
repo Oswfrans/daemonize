@@ -12,7 +12,11 @@ import org.etcd4s.formats.Formats._
 import org.etcd4s.pb.etcdserverpb._
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.{Try,Success,Failure}
 
+import scala.concurrent.Await
+import scala.concurrent.duration._
+import scala.concurrent.Future
 
 /**
  * This controller creates an `Action` to handle HTTP requests to the
@@ -26,7 +30,13 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
       case success: JsSuccess[OriginalTransaction] =>
         val input = success.value
 
+        //because of a succesful parse of the api call, we gather data from our KV store
+        //for now testcase, later we will need to adapt the leapframe to include the actual kv data
 
+        //for now we create one client per call, not sure if correct
+        // create the client
+
+        //see below for code that needs to here
 
         //generate different candidate transactions here
         //we generate the default transaction if the currentrank is not too high
@@ -100,13 +110,68 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
     }
   }
 
-  def healthz() = Action {
-    Ok("Healthy")
+  def getKey() : Future[Option[ String ] ] = {
+    val config = Etcd4sClientConfig(
+      address = "127.0.0.1",
+      port = 2379
+    )
+    val client = Etcd4sClient.newClient(config)
+
+    val hello = "55555"
+    val currentValue =  client.kvService.getKey(hello)
+    return currentValue
   }
 
-  /*
-  def etcd() = Action {
-    Ok(currentValue)
+  def setKey(valSet: String) : Unit = {
+    val config = Etcd4sClientConfig(
+      address = "127.0.0.1",
+      port = 2379
+    )
+    val client = Etcd4sClient.newClient(config)
+    val hello = "55555"
+    client.kvService.setKey(hello, valSet)
   }
-*/
+
+  def insertKeyz() : Unit = {
+    val config = Etcd4sClientConfig(
+      address = "127.0.0.1",
+      port = 2379
+    )
+    val client = Etcd4sClient.newClient(config)
+    for( i <- 1 to 100000) {
+      val key = i.toString
+      val value = (i%2).toString
+      client.kvService.setKey(key, value)
+    }
+  }
+
+  //Array(0,1,2,3,4,5)
+  //Array int is the most efficient, still need to determine which approach is better
+  //new object or more keys
+  def healthz() = Action.async {
+    //insertKeyz()
+    getKey.map(  value =>
+      value match {
+        case Some(x)   => { //if x != "Future(<not completed>)"
+
+          setKey( (x.toInt + 1).toString )
+          Ok(( x.toInt + 1).toString )
+          //setKey(x + "|")
+          //Ok(x + "|")
+        }
+        case None => {
+          setKey( 0.toString )
+          Ok( 0.toString )
+          //setKey("|")
+          //Ok("|")
+        }
+
+      }
+
+    )
+  }
+
+
+
+
 }

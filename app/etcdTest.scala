@@ -1,3 +1,5 @@
+/*
+
 import org.etcd4s.{Etcd4sClientConfig, Etcd4sClient}
 import org.etcd4s.implicits._
 import org.etcd4s.formats.Formats._
@@ -26,6 +28,8 @@ else {
 
 // remember to shutdown the client
 client.shutdown()
+
+*/
 
 /***
 // set a key

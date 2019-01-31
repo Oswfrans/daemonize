@@ -15,6 +15,8 @@ libraryDependencies ++= Seq(
   "ai.x" %% "play-json-extensions" % "0.10.0",
   "org.julienrf" %% "play-json-derived-codecs" % "4.0.1",
   "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % Test,
-  "com.github.mingchuno" %% "etcd4s-core" % "0.1.4"
+  "com.github.mingchuno" %% "etcd4s-core" % "0.1.4",
+  "net.nikore.etcd" %% "scala-etcd" % "0.8"
+
 
 )
