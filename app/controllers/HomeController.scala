@@ -103,7 +103,7 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
           // we set new values for the key
           // needs to be changed to be something derived from input!!!!
           for (x <- keyArray) {
-            setKey(x, "-1")
+            setKey(x, "7")
           }
 
           // 0 normal txn
@@ -184,17 +184,17 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
   def healthz() = Action.async {
     //insertKeyz()
 
-    getVal("55555").map(  value =>
+    getVal("10001a").map(  value =>
       value match {
         case Some(x)   => { //if x != "Future(<not completed>)"
 
-          setKey("55555" ,(x.toInt + 1).toString )
+          setKey("10001a" ,(x.toInt + 1).toString )
           Ok(( x.toInt + 1).toString )
           //setKey(x + "|")
           //Ok(x + "|")
         }
         case None => {
-          setKey("55555",0.toString )
+          setKey("10001a",0.toString )
           Ok( 0.toString )
           //setKey("|")
           //Ok("|")
