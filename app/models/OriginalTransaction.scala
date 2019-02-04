@@ -56,56 +56,56 @@ case class OriginalTransaction(card: OriginalCard,
 
 object OriginalTransaction {
 
-  implicit val cardFormat : Format[OriginalCard] =     //Json.format[OriginalCard]
+  implicit val cardFormat: Format[OriginalCard] = //Json.format[OriginalCard]
     (
-      (JsPath \ "OriginalTransaction" \  "Card" \ "ExpiryMonth").format[Double] and
-        (JsPath \ "OriginalTransaction" \  "Card" \ "ExpiryYear").format[Double] and
-        (JsPath \ "OriginalTransaction" \  "Card" \ "Cv2ResultType").format[String] and
-        (JsPath \ "OriginalTransaction" \  "Card" \ "Cv2Reponse").format[String] and
-        (JsPath \ "OriginalTransaction" \  "Card" \ "AvsThere").format[String] and
+      (JsPath \ "OriginalTransaction" \ "Card" \ "ExpiryMonth").format[Double] and
+        (JsPath \ "OriginalTransaction" \ "Card" \ "ExpiryYear").format[Double] and
+        (JsPath \ "OriginalTransaction" \ "Card" \ "Cv2ResultType").format[String] and
+        (JsPath \ "OriginalTransaction" \ "Card" \ "Cv2Reponse").format[String] and
+        (JsPath \ "OriginalTransaction" \ "Card" \ "AvsThere").format[String] and
 
-        (JsPath \ "OriginalTransaction" \  "Card" \"BinDetail" \  "CardBrand").format[String] and
-        (JsPath \ "OriginalTransaction" \  "Card" \"BinDetail" \  "IssuerCountryCode").format[String] and
-        (JsPath \ "OriginalTransaction" \  "Card" \"BinDetail" \  "IssuerCode").format[String] and
-        (JsPath \ "OriginalTransaction" \  "Card" \"BinDetail" \  "CardSubTypeId").format[String] and
-        (JsPath \ "OriginalTransaction" \  "Card" \"BinDetail" \  "IssuerTypeID").format[String] and
+        (JsPath \ "OriginalTransaction" \ "Card" \ "BinDetail" \ "CardBrand").format[String] and
+        (JsPath \ "OriginalTransaction" \ "Card" \ "BinDetail" \ "IssuerCountryCode").format[String] and
+        (JsPath \ "OriginalTransaction" \ "Card" \ "BinDetail" \ "IssuerCode").format[String] and
+        (JsPath \ "OriginalTransaction" \ "Card" \ "BinDetail" \ "CardSubTypeId").format[String] and
+        (JsPath \ "OriginalTransaction" \ "Card" \ "BinDetail" \ "IssuerTypeID").format[String] and
 
 
-        (JsPath \ "OriginalTransaction" \  "Card" \ "BinInfo" \ "CardSchemaId").format[String] and
-        (JsPath \ "OriginalTransaction" \  "Card" \ "BinInfo" \"ServiceTypeId").format[String] and
-        (JsPath \ "OriginalTransaction" \  "Card" \ "BinInfo" \ "IsCommercial").format[String] and
-        (JsPath \ "OriginalTransaction" \  "Card" \ "BinInfo" \ "IsPrepaid").format[String] and
-        (JsPath \ "OriginalTransaction" \  "Card" \"BinInfo" \  "IssuerCode").format[String] and
+        (JsPath \ "OriginalTransaction" \ "Card" \ "BinInfo" \ "CardSchemaId").format[String] and
+        (JsPath \ "OriginalTransaction" \ "Card" \ "BinInfo" \ "ServiceTypeId").format[String] and
+        (JsPath \ "OriginalTransaction" \ "Card" \ "BinInfo" \ "IsCommercial").format[String] and
+        (JsPath \ "OriginalTransaction" \ "Card" \ "BinInfo" \ "IsPrepaid").format[String] and
+        (JsPath \ "OriginalTransaction" \ "Card" \ "BinInfo" \ "IssuerCode").format[String] and
 
-        (JsPath \ "OriginalTransaction" \  "Card" \"BinInfo" \  "ProductCode").format[String] and
-        (JsPath \ "OriginalTransaction" \  "Card" \"BinInfo" \  "ProductSubCode").format[String] and
-        (JsPath \ "OriginalTransaction" \  "Card" \"BinInfo" \  "BrandCode").format[String] and
+        (JsPath \ "OriginalTransaction" \ "Card" \ "BinInfo" \ "ProductCode").format[String] and
+        (JsPath \ "OriginalTransaction" \ "Card" \ "BinInfo" \ "ProductSubCode").format[String] and
+        (JsPath \ "OriginalTransaction" \ "Card" \ "BinInfo" \ "BrandCode").format[String] and
 
-        (JsPath \ "OriginalTransaction" \  "Card" \ "BinInfo" \  "CountryCode").format[String]
+        (JsPath \ "OriginalTransaction" \ "Card" \ "BinInfo" \ "CountryCode").format[String]
       ) (OriginalCard.apply, unlift(OriginalCard.unapply))
 
-  implicit val merchantFormat : Format[OriginalMerchant] = //Json.format[OriginalMerchant]
+  implicit val merchantFormat: Format[OriginalMerchant] = //Json.format[OriginalMerchant]
     (
-      (JsPath \ "OriginalTransaction" \  "Merchant" \ "CountryCode").format[String] and
-        (JsPath \ "OriginalTransaction" \  "Merchant" \ "CategoryCodeGroup").format[String] and
-        (JsPath \"OriginalTransaction" \   "Merchant" \ "MemberId").format[String]
-    ) (OriginalMerchant.apply, unlift(OriginalMerchant.unapply))
+      (JsPath \ "OriginalTransaction" \ "Merchant" \ "CountryCode").format[String] and
+        (JsPath \ "OriginalTransaction" \ "Merchant" \ "CategoryCodeGroup").format[String] and
+        (JsPath \ "OriginalTransaction" \ "Merchant" \ "MemberId").format[String]
+      ) (OriginalMerchant.apply, unlift(OriginalMerchant.unapply))
 
-  implicit val infoFormat : Format[OriginalInfo] = //Json.format[OriginalInfo]
+  implicit val infoFormat: Format[OriginalInfo] = //Json.format[OriginalInfo]
     (
-  (JsPath \ "Retry" \ "CurrentRank").format[Double] and
-    (JsPath \ "Retry" \ "PreviousResponseCode").format[String] and
+      (JsPath \ "Retry" \ "CurrentRank").format[Double] and
+        (JsPath \ "Retry" \ "PreviousResponseCode").format[String] and
 
-  (JsPath \ "OriginalTransaction" \ "InternalAmount").format[Double] and
-    (JsPath \ "OriginalTransaction" \ "InitialRecurring").format[String] and
-    (JsPath \ "OriginalTransaction" \ "AuthDateTime").format[String] and
-    (JsPath \ "OriginalTransaction" \ "TransactionTypeId").format[String] and
-    (JsPath \ "OriginalTransaction" \ "Channel").format[String] and
-    (JsPath \ "OriginalTransaction" \ "Eci").format[String] and
-    (JsPath \ "OriginalTransaction" \ "CurrencyId").format[String]
+        (JsPath \ "OriginalTransaction" \ "InternalAmount").format[Double] and
+        (JsPath \ "OriginalTransaction" \ "InitialRecurring").format[String] and
+        (JsPath \ "OriginalTransaction" \ "AuthDateTime").format[String] and
+        (JsPath \ "OriginalTransaction" \ "TransactionTypeId").format[String] and
+        (JsPath \ "OriginalTransaction" \ "Channel").format[String] and
+        (JsPath \ "OriginalTransaction" \ "Eci").format[String] and
+        (JsPath \ "OriginalTransaction" \ "CurrencyId").format[String]
       ) (OriginalInfo.apply, unlift(OriginalInfo.unapply))
 
-  implicit val inputForm : Format[OriginalTransaction] = (
+  implicit val inputForm: Format[OriginalTransaction] = (
     (JsPath).format[OriginalCard] and
       (JsPath).format[OriginalMerchant] and
       (JsPath).format[OriginalInfo]
@@ -167,7 +167,7 @@ object OriginalTransaction {
     StructField("cardexpirydate", ScalarType.String),
     StructField("succeeded", ScalarType.String),
     StructField("succeededrank", ScalarType.String),
-    StructField("rank", ScalarType.Double ),  //ScalarType.String),
+    StructField("rank", ScalarType.Double), //ScalarType.String),
     StructField("respcodeprevious", ScalarType.String),
     StructField("cv2resultprevious", ScalarType.String),
     StructField("issuerprevious", ScalarType.String),
@@ -209,413 +209,248 @@ object OriginalTransaction {
     StructField("doublelabel", ScalarType.Double)
   ).get
 
-  // I believe this converts the object to a row
-  //we should probably do feature expansion here as well or in the homecontroller
-  //current implementation is really ugly with lots of code repetition
-  //going to ask Juman to review?
 
+  //very happy with the current implementation that takes one Seq and then adepts it :)
   //will need to adept this code after talking to Jorge
-  //do not forget to replicate the changes accross the different cases!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
   def toRow(origTrx: OriginalTransaction, frameType: Int): Row = {
+    var ogRowSeq = Seq("1", // approvalcode
+      origTrx.info.currencyid, // originalcurrencyid
+      origTrx.info.internalamount, // internalamount
+      origTrx.info.authdatetime.substring(0, 10), // authdate
+      "1", // authtimestamp
+      "1", // authresult
+      origTrx.info.transactiontypeid, // transactiontypeid
+      "1", // cardid
+      "1", // merchantaccountid
+      "1", // memberid
+      "1", // transactionoriginatorid
+      "1", // detailedcode
+      "1", // firstsixdigits
+      origTrx.card.cv2response, // cvvresponse
+      "1", // authorizationtypeid
+      origTrx.info.channel, // channel
+      "1", // channelsubtype
+      origTrx.info.initialrecurring, // initialrecurring
+      origTrx.merchant.merchantcountrycode, // merchantcountrycode
+      "1", // originalauthenticationindicator
+      "1", // authenticationvalue
+      origTrx.merchant.mid, // mid
+      "1", // processorid
+      origTrx.merchant.mcc, // categorycodegroup
+      origTrx.card.cardbrandbindetail, // cardbrand
+      origTrx.card.issuercodebindetail, // issuercountrycode , is this the bin detail info?
+      origTrx.card.issuercodebindetail, // issuercode
+      "1", // cardusageid
+      origTrx.card.cardsubtypeidbindetail, // cardsubtypeid
+      origTrx.card.issuertypeidbindetail, // issuertypeid
+      origTrx.card.cardcommercial, // cardcommercial
+      origTrx.card.cardprepaid, // cardprepaid
+      "1", // originalbin
+      "1", // authweekofyear
+      origTrx.info.authdatetime.substring(11, 13), // authhour
+      "1", // retryoptimization , need to parse the JSON better
+      "1", // cardschemaname
+      "1", // servicetypename
+      origTrx.card.issuercode, // bininfoissuercode
+      "1", // countryname
+      origTrx.card.productcode, // bininfoproductcode
+      origTrx.card.productsubcode, // bininfoproductsubcode
+      "1", // productdescription
+      origTrx.card.brandcode, // bininfobrandcode
+      origTrx.card.cardschemaid, // bininfocardschemaid
+      origTrx.card.servicetypeid, // bininfoservicetypeid
+      origTrx.card.issuercountrycode, // bininfocountrycode
+      "1", // vertical
+      origTrx.info.authdatetime.substring(0, 4), // authyear
+      origTrx.info.authdatetime.substring(5, 7), // authmonth
+      origTrx.info.authdatetime.substring(8, 10), // authday
+      "1", // threeD
+      "1", //origTrx.card.expiryyear.toString.concat("-").concat(origTrx.card.expirymonth.toString) ,   // cardexpirydate NEED to asses proper format
+      "1", // succeeded
+      "1", // succeededrank
+      origTrx.info.currentrank, // rank
+      origTrx.info.previousresponsecode, // respcodeprevious
+      "1", // cv2resultprevious
+      "1", // issuerprevious
+      "1", // threedprevious
+      "1", // channelprevious
+      "1", // channelsubtypeprevious
+      "1", // transactiontypeidprevious
+      "1", // authorizationtypeidprevious
+      "1", // processoridprevious
+      "1", // categorycodegroupprevious
+      "1", // channelsubtypefirst
+      "1", // processoridfirst
+      "1", // avstherefirst
+      "1", // threedtherefirst
+      "1", // respcodefirst
+      "1", // firstdate
+      "1", // issuerfirst
+      "1", // threedfirst
+      "1", // channelfirst
+      "1", // transactiontypeidfirst
+      "1", // authorizationtypeidfirst
+      "1", // categorycodegroupfirst
+      "1", // cv2resultfirst
+      origTrx.card.avsthere, // avsthere
+      "1", // cv2there
+      "1", // expthere
+      "1", // threedthere
+      "1", // threedtherechange
+      "1", // cv2change
+      "1", // authdatesecondsdiff
+      "1", // issuerchange
+      "1", // threedchange
+      "1", // categorycodegroupchange
+      "1", // avstherechange
+      "1", // authorizationtypeidchange
+      "1", // processoridchange
+      "1", // channelsubtypechange
+      "1", // channelchange
+      1.0
+    )
     frameType match {
       case 0 =>
-        Row(
-          "1",                        // approvalcode
-          origTrx.info.currencyid,                    // originalcurrencyid
-          origTrx.info.internalamount,                // internalamount
-          origTrx.info.authdatetime.substring(0,10),  // authdate
-          "1",                        // authtimestamp
-          "1",                        // authresult
-          origTrx.info.transactiontypeid,             // transactiontypeid
-          "1",                        // cardid
-          "1",                        // merchantaccountid
-          "1",                        // memberid
-          "1",                        // transactionoriginatorid
-          "1",                        // detailedcode
-          "1",     // firstsixdigits
-          origTrx.card.cv2response,                  // cvvresponse
-          "1",                        // authorizationtypeid
-          origTrx.info.channel ,                     // channel
-          "1",                        // channelsubtype
-          origTrx.info.initialrecurring,             // initialrecurring
-          origTrx.merchant.merchantcountrycode,          // merchantcountrycode
-          "1",                        // originalauthenticationindicator
-          "1",                        // authenticationvalue
-          origTrx.merchant.mid,                // mid
-          "1",                        // processorid
-          origTrx.merchant.mcc,                        // categorycodegroup
-          origTrx.card.cardbrandbindetail,   // cardbrand
-          origTrx.card.issuercodebindetail,          // issuercountrycode , is this the bin detail info?
-          origTrx.card.issuercodebindetail,                 // issuercode
-          "1",   // cardusageid
-          origTrx.card.cardsubtypeidbindetail,   // cardsubtypeid
-          origTrx.card.issuertypeidbindetail,   // issuertypeid
-          origTrx.card.cardcommercial,             // cardcommercial
-          origTrx.card.cardprepaid,                // cardprepaid
-          "1",   // originalbin
-          "1",   // authweekofyear
-          origTrx.info.authdatetime.substring(11,13),   // authhour
-          "1",   // retryoptimization , need to parse the JSON better
-          "1",   // cardschemaname
-          "1",   // servicetypename
-          origTrx.card.issuercode,   // bininfoissuercode
-          "1",   // countryname
-          origTrx.card.productcode,   // bininfoproductcode
-          origTrx.card.productsubcode,   // bininfoproductsubcode
-          "1",   // productdescription
-          origTrx.card.brandcode,   // bininfobrandcode
-          origTrx.card.cardschemaid,   // bininfocardschemaid
-          origTrx.card.servicetypeid,   // bininfoservicetypeid
-          origTrx.card.issuercountrycode,   // bininfocountrycode
-          "1",   // vertical
-          origTrx.info.authdatetime.substring(0,4),   // authyear
-          origTrx.info.authdatetime.substring(5,7),   // authmonth
-          origTrx.info.authdatetime.substring(8,10),   // authday
-          "1",   // threeD
-          "1",//origTrx.card.expiryyear.toString.concat("-").concat(origTrx.card.expirymonth.toString) ,   // cardexpirydate NEED to asses proper format
-          "1",   // succeeded
-          "1",   // succeededrank
-          origTrx.info.currentrank,                // rank
-          origTrx.info.previousresponsecode,       // respcodeprevious
-          "1",   // cv2resultprevious
-          "1",   // issuerprevious
-          "1",   // threedprevious
-          "1",   // channelprevious
-          "1",   // channelsubtypeprevious
-          "1",   // transactiontypeidprevious
-          "1",   // authorizationtypeidprevious
-          "1",   // processoridprevious
-          "1",   // categorycodegroupprevious
-          "1",   // channelsubtypefirst
-          "1",   // processoridfirst
-          "1",   // avstherefirst
-          "1",   // threedtherefirst
-          "1",   // respcodefirst
-          "1",   // firstdate
-          "1",   // issuerfirst
-          "1",   // threedfirst
-          "1",   // channelfirst
-          "1",   // transactiontypeidfirst
-          "1",   // authorizationtypeidfirst
-          "1",   // categorycodegroupfirst
-          "1",   // cv2resultfirst
-          origTrx.card.avsthere,                 // avsthere
-          "1",   // cv2there
-          "1",   // expthere
-          "1",   // threedthere
-          "1",   // threedtherechange
-          "1",   // cv2change
-          "1",   // authdatesecondsdiff
-          "1",   // issuerchange
-          "1",   // threedchange
-          "1",   // categorycodegroupchange
-          "1",   // avstherechange
-          "1",   // authorizationtypeidchange
-          "1",   // processoridchange
-          "1",   // channelsubtypechange
-          "1",   // channelchange
-          1.0
-        )
+        Row(ogRowSeq)
+      // 1 channel moto (channel 2, channelchange 1 and threed 0 and threedchange 1 )
+      // 2 remove threed (threed 0 and threedchange 1)
       case 1 =>
-        Row(
-          "1",                        // approvalcode
-          origTrx.info.currencyid,                    // originalcurrencyid
-          origTrx.info.internalamount,                // internalamount
-          origTrx.info.authdatetime.substring(0,10),  // authdate
-          "1",                        // authtimestamp
-          "1",                        // authresult
-          origTrx.info.transactiontypeid,             // transactiontypeid
-          "1",                        // cardid
-          "1",                        // merchantaccountid
-          "1",                        // memberid
-          "1",                        // transactionoriginatorid
-          "1",                        // detailedcode
-          "1",     // firstsixdigits
-          origTrx.card.cv2response,                  // cvvresponse
-          "1",                        // authorizationtypeid
-          "2" ,                       // channel
-          "1",                        // channelsubtype
-          origTrx.info.initialrecurring,             // initialrecurring
-          origTrx.merchant.merchantcountrycode,          // merchantcountrycode
-          "1",                        // originalauthenticationindicator
-          "1",                        // authenticationvalue
-          origTrx.merchant.mid,                // mid
-          "1",                        // processorid
-          origTrx.merchant.mcc,                        // categorycodegroup
-          "1",   // cardbrand
-          origTrx.card.issuercountrycode,          // issuercountrycode
-          origTrx.card.issuercode,                 // issuercode
-          "1",   // cardusageid
-          "1",   // cardsubtypeid
-          "1",   // issuertypeid
-          origTrx.card.cardcommercial,             // cardcommercial
-          origTrx.card.cardprepaid,                // cardprepaid
-          "1",   // originalbin
-          "1",   // authweekofyear
-          "1",   // authhour
-          "1",   // retryoptimization
-          "1",   // cardschemaname
-          "1",   // servicetypename
-          "1",   // bininfoissuercode
-          "1",   // countryname
-          "1",   // bininfoproductcode
-          "1",   // bininfoproductsubcode
-          "1",   // productdescription
-          "1",   // bininfobrandcode
-          "1",   // bininfocardschemaid
-          "1",   // bininfoservicetypeid
-          "1",   // bininfocountrycode
-          "1",   // vertical
-          "1",   // authyear
-          "1",   // authmonth
-          "1",   // authday
-          "0",   // threeD
-          "1",//origTrx.card.expiryyear.toString.concat("-").concat(origTrx.card.expirymonth.toString) ,   // cardexpirydate NEED to asses proper format
-          "1",   // succeeded
-          "1",   // succeededrank
-          origTrx.info.currentrank,                // rank
-          origTrx.info.previousresponsecode,       // respcodeprevious
-          "1",   // cv2resultprevious
-          "1",   // issuerprevious
-          "1",   // threedprevious
-          "1",   // channelprevious
-          "1",   // channelsubtypeprevious
-          "1",   // transactiontypeidprevious
-          "1",   // authorizationtypeidprevious
-          "1",   // processoridprevious
-          "1",   // categorycodegroupprevious
-          "1",   // channelsubtypefirst
-          "1",   // processoridfirst
-          "1",   // avstherefirst
-          "1",   // threedtherefirst
-          "1",   // respcodefirst
-          "1",   // firstdate
-          "1",   // issuerfirst
-          "1",   // threedfirst
-          "1",   // channelfirst
-          "1",   // transactiontypeidfirst
-          "1",   // authorizationtypeidfirst
-          "1",   // categorycodegroupfirst
-          "1",   // cv2resultfirst
-          origTrx.card.avsthere,                 // avsthere
-          "1",   // cv2there
-          "1",   // expthere
-          "1",   // threedthere
-          "1",   // threedtherechange
-          "1",   // cv2change
-          "1",   // authdatesecondsdiff
-          "1",   // issuerchange
-          "1",   // threedchange
-          "1",   // categorycodegroupchange
-          "1",   // avstherechange
-          "1",   // authorizationtypeidchange
-          "1",   // processoridchange
-          "1",   // channelsubtypechange
-          "1",   // channelchange
-          1.0
-        )
-      case 2 =>
-        Row(
-          "1",                        // approvalcode
-          origTrx.info.currencyid,                    // originalcurrencyid
-          origTrx.info.internalamount,                // internalamount
-          origTrx.info.authdatetime.substring(0,10),  // authdate
-          "1",                        // authtimestamp
-          "1",                        // authresult
-          origTrx.info.transactiontypeid,             // transactiontypeid
-          "1",                        // cardid
-          "1",                        // merchantaccountid
-          "1",                        // memberid
-          "1",                        // transactionoriginatorid
-          "1",                        // detailedcode
-          "1",     // firstsixdigits
-          origTrx.card.cv2response,                  // cvvresponse
-          "1",                        // authorizationtypeid
-          origTrx.info.channel ,                     // channel
-          "1",                        // channelsubtype
-          origTrx.info.initialrecurring,             // initialrecurring
-          origTrx.merchant.merchantcountrycode,          // merchantcountrycode
-          "1",                        // originalauthenticationindicator
-          "1",                        // authenticationvalue
-          origTrx.merchant.mid,                // mid
-          "1",                        // processorid
-          origTrx.merchant.mcc,                        // categorycodegroup
-          "1",   // cardbrand
-          origTrx.card.issuercountrycode,          // issuercountrycode
-          origTrx.card.issuercode,                 // issuercode
-          "1",   // cardusageid
-          "1",   // cardsubtypeid
-          "1",   // issuertypeid
-          origTrx.card.cardcommercial,             // cardcommercial
-          origTrx.card.cardprepaid,                // cardprepaid
-          "1",   // originalbin
-          "1",   // authweekofyear
-          "1",   // authhour
-          "1",   // retryoptimization
-          "1",   // cardschemaname
-          "1",   // servicetypename
-          "1",   // bininfoissuercode
-          "1",   // countryname
-          "1",   // bininfoproductcode
-          "1",   // bininfoproductsubcode
-          "1",   // productdescription
-          "1",   // bininfobrandcode
-          "1",   // bininfocardschemaid
-          "1",   // bininfoservicetypeid
-          "1",   // bininfocountrycode
-          "1",   // vertical
-          "1",   // authyear
-          "1",   // authmonth
-          "1",   // authday
-          "1",   // threeD
-          "1",//origTrx.card.expiryyear.toString.concat("-").concat(origTrx.card.expirymonth.toString) ,   // cardexpirydate NEED to asses proper format
-          "1",   // succeeded
-          "1",   // succeededrank
-          origTrx.info.currentrank,                // rank
-          origTrx.info.previousresponsecode,       // respcodeprevious
-          "1",   // cv2resultprevious
-          "1",   // issuerprevious
-          "1",   // threedprevious
-          "1",   // channelprevious
-          "1",   // channelsubtypeprevious
-          "1",   // transactiontypeidprevious
-          "1",   // authorizationtypeidprevious
-          "1",   // processoridprevious
-          "1",   // categorycodegroupprevious
-          "1",   // channelsubtypefirst
-          "1",   // processoridfirst
-          "1",   // avstherefirst
-          "1",   // threedtherefirst
-          "1",   // respcodefirst
-          "1",   // firstdate
-          "1",   // issuerfirst
-          "1",   // threedfirst
-          "1",   // channelfirst
-          "1",   // transactiontypeidfirst
-          "1",   // authorizationtypeidfirst
-          "1",   // categorycodegroupfirst
-          "1",   // cv2resultfirst
-          origTrx.card.avsthere,                 // avsthere
-          "1",   // cv2there
-          "1",   // expthere
-          "1",   // threedthere
-          "1",   // threedtherechange
-          "1",   // cv2change
-          "1",   // authdatesecondsdiff
-          "1",   // issuerchange
-          "1",   // threedchange
-          "1",   // categorycodegroupchange
-          "1",   // avstherechange
-          "1",   // authorizationtypeidchange
-          "1",   // processoridchange
-          "1",   // channelsubtypechange
-          "1",   // channelchange
-          1.0
-        )
-      case 3 =>
-        Row(
-          "1",                        // approvalcode
-          origTrx.info.currencyid,                    // originalcurrencyid
-          origTrx.info.internalamount,                // internalamount
-          origTrx.info.authdatetime.substring(0,10),  // authdate
-          "1",                        // authtimestamp
-          "1",                        // authresult
-          origTrx.info.transactiontypeid,             // transactiontypeid
-          "1",                        // cardid
-          "1",                        // merchantaccountid
-          "1",                        // memberid
-          "1",                        // transactionoriginatorid
-          "1",                        // detailedcode
-          "1",     // firstsixdigits
-          origTrx.card.cv2response,                  // cvvresponse
-          "1",                        // authorizationtypeid
-          "2" ,                     // channel
-          "1",                        // channelsubtype
-          origTrx.info.initialrecurring,             // initialrecurring
-          origTrx.merchant.merchantcountrycode,          // merchantcountrycode
-          "1",                        // originalauthenticationindicator
-          "1",                        // authenticationvalue
-          origTrx.merchant.mid,                // mid
-          "1",                        // processorid
-          origTrx.merchant.mcc,                        // categorycodegroup
-          "1",   // cardbrand
-          origTrx.card.issuercountrycode,          // issuercountrycode
-          origTrx.card.issuercode,                 // issuercode
-          "1",   // cardusageid
-          "1",   // cardsubtypeid
-          "1",   // issuertypeid
-          origTrx.card.cardcommercial,             // cardcommercial
-          origTrx.card.cardprepaid,                // cardprepaid
-          "1",   // originalbin
-          "1",   // authweekofyear
-          "1",   // authhour
-          "1",   // retryoptimization
-          "1",   // cardschemaname
-          "1",   // servicetypename
-          "1",   // bininfoissuercode
-          "1",   // countryname
-          "1",   // bininfoproductcode
-          "1",   // bininfoproductsubcode
-          "1",   // productdescription
-          "1",   // bininfobrandcode
-          "1",   // bininfocardschemaid
-          "1",   // bininfoservicetypeid
-          "1",   // bininfocountrycode
-          "1",   // vertical
-          "1",   // authyear
-          "1",   // authmonth
-          "1",   // authday
-          "0",   // threeD
-          "1",//origTrx.card.expiryyear.toString.concat("-").concat(origTrx.card.expirymonth.toString) ,   // cardexpirydate NEED to asses proper format
-          "1",   // succeeded
-          "1",   // succeededrank
-          origTrx.info.currentrank,                // rank
-          origTrx.info.previousresponsecode,       // respcodeprevious
-          "1",   // cv2resultprevious
-          "1",   // issuerprevious
-          "1",   // threedprevious
-          "1",   // channelprevious
-          "1",   // channelsubtypeprevious
-          "1",   // transactiontypeidprevious
-          "1",   // authorizationtypeidprevious
-          "1",   // processoridprevious
-          "1",   // categorycodegroupprevious
-          "1",   // channelsubtypefirst
-          "1",   // processoridfirst
-          "1",   // avstherefirst
-          "1",   // threedtherefirst
-          "1",   // respcodefirst
-          "1",   // firstdate
-          "1",   // issuerfirst
-          "1",   // threedfirst
-          "1",   // channelfirst
-          "1",   // transactiontypeidfirst
-          "1",   // authorizationtypeidfirst
-          "1",   // categorycodegroupfirst
-          "1",   // cv2resultfirst
-          origTrx.card.avsthere,                 // avsthere
-          "1",   // cv2there
-          "1",   // expthere
-          "1",   // threedthere
-          "1",   // threedtherechange
-          "1",   // cv2change
-          "1",   // authdatesecondsdiff
-          "1",   // issuerchange
-          "1",   // threedchange
-          "1",   // categorycodegroupchange
-          "1",   // avstherechange
-          "1",   // authorizationtypeidchange
-          "1",   // processoridchange
-          "1",   // channelsubtypechange
-          "1",   // channelchange
-          1.0
-        )
-    }
+        //side effects hmmm
+        ogRowSeq = ogRowSeq.updated(15, 2)  //ogRowSeq(15) = 2 //channel
+        ogRowSeq = ogRowSeq.updated(93, 1)  //ogRowSeq(93) = 1 //channelchange
+        ogRowSeq = ogRowSeq.updated(51, 0)  //ogRowSeq(51) = 0 //threed
+        ogRowSeq = ogRowSeq.updated(87, 1) //ogRowSeq(87) = 1 //threedchange
+        Row(ogRowSeq)
 
+      case 2 =>
+        ogRowSeq = ogRowSeq.updated(51, 0)  //ogRowSeq(51) = 0 //threed
+        ogRowSeq = ogRowSeq.updated(87, 1) //ogRowSeq(87) = 1 //threedchange
+        Row(ogRowSeq)
+    }
+  }
+
+  //we define the KV method here, this is still quite ugly, we repeat so much code aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  //for now this a testMethod, will need to be adapted afte we have a new API contract and new models
+  //we asume we have dealt with the fact that it is Future[Option[String]] here and we just have an Array[String]
+
+  def toRowKV(origTrx: OriginalTransaction, frameType: Int, kvArray: Array[String]): Row = {
+    var ogRowSeq = Seq("1", // approvalcode
+      origTrx.info.currencyid, // originalcurrencyid
+      origTrx.info.internalamount, // internalamount
+      origTrx.info.authdatetime.substring(0, 10), // authdate
+      "1", // authtimestamp
+      "1", // authresult
+      origTrx.info.transactiontypeid, // transactiontypeid
+      "1", // cardid
+      "1", // merchantaccountid
+      "1", // memberid
+      "1", // transactionoriginatorid
+      "1", // detailedcode
+      "1", // firstsixdigits
+      origTrx.card.cv2response, // cvvresponse
+      "1", // authorizationtypeid
+      origTrx.info.channel, // channel
+      "1", // channelsubtype
+      origTrx.info.initialrecurring, // initialrecurring
+      origTrx.merchant.merchantcountrycode, // merchantcountrycode
+      "1", // originalauthenticationindicator
+      "1", // authenticationvalue
+      origTrx.merchant.mid, // mid
+      "1", // processorid
+      origTrx.merchant.mcc, // categorycodegroup
+      origTrx.card.cardbrandbindetail, // cardbrand
+      origTrx.card.issuercodebindetail, // issuercountrycode , is this the bin detail info?
+      origTrx.card.issuercodebindetail, // issuercode
+      "1", // cardusageid
+      origTrx.card.cardsubtypeidbindetail, // cardsubtypeid
+      origTrx.card.issuertypeidbindetail, // issuertypeid
+      origTrx.card.cardcommercial, // cardcommercial
+      origTrx.card.cardprepaid, // cardprepaid
+      "1", // originalbin
+      "1", // authweekofyear
+      origTrx.info.authdatetime.substring(11, 13), // authhour
+      "1", // retryoptimization , need to parse the JSON better
+      "1", // cardschemaname
+      "1", // servicetypename
+      origTrx.card.issuercode, // bininfoissuercode
+      "1", // countryname
+      origTrx.card.productcode, // bininfoproductcode
+      origTrx.card.productsubcode, // bininfoproductsubcode
+      "1", // productdescription
+      origTrx.card.brandcode, // bininfobrandcode
+      origTrx.card.cardschemaid, // bininfocardschemaid
+      origTrx.card.servicetypeid, // bininfoservicetypeid
+      origTrx.card.issuercountrycode, // bininfocountrycode
+      "1", // vertical
+      origTrx.info.authdatetime.substring(0, 4), // authyear
+      origTrx.info.authdatetime.substring(5, 7), // authmonth
+      origTrx.info.authdatetime.substring(8, 10), // authday
+      "1", // threeD
+      "1", //origTrx.card.expiryyear.toString.concat("-").concat(origTrx.card.expirymonth.toString) ,   // cardexpirydate NEED to asses proper format
+      "1", // succeeded
+      "1", // succeededrank
+      origTrx.info.currentrank, // rank
+      origTrx.info.previousresponsecode, // respcodeprevious
+      "1", // cv2resultprevious
+      kvArray(0), // issuerprevious
+      kvArray(1), // threedprevious
+      kvArray(2), // channelprevious
+      kvArray(3), // channelsubtypeprevious
+      "1", // transactiontypeidprevious
+      "1", // authorizationtypeidprevious
+      "1", // processoridprevious
+      "1", // categorycodegroupprevious
+      "1", // channelsubtypefirst
+      "1", // processoridfirst
+      "1", // avstherefirst
+      "1", // threedtherefirst
+      "1", // respcodefirst
+      "1", // firstdate
+      "1", // issuerfirst
+      "1", // threedfirst
+      "1", // channelfirst
+      "1", // transactiontypeidfirst
+      "1", // authorizationtypeidfirst
+      "1", // categorycodegroupfirst
+      "1", // cv2resultfirst
+      origTrx.card.avsthere, // avsthere
+      "1", // cv2there
+      "1", // expthere
+      "1", // threedthere
+      "1", // threedtherechange
+      "1", // cv2change
+      "1", // authdatesecondsdiff
+      "1", // issuerchange
+      "1", // threedchange
+      "1", // categorycodegroupchange
+      "1", // avstherechange
+      "1", // authorizationtypeidchange
+      "1", // processoridchange
+      "1", // channelsubtypechange
+      "1", // channelchange
+      1.0
+    )
+    frameType match {
+      case 0 =>
+        Row(ogRowSeq)
+      // 1 channel moto (channel 2, channelchange 1 and threed 0 and threedchange 1 )
+      // 2 remove threed (threed 0 and threedchange 1)
+      case 1 =>
+        //side effects hmmm
+        ogRowSeq = ogRowSeq.updated(15, 2)  //ogRowSeq(15) = 2 //channel
+        ogRowSeq = ogRowSeq.updated(93, 1)  //ogRowSeq(93) = 1 //channelchange
+        ogRowSeq = ogRowSeq.updated(51, 0)  //ogRowSeq(51) = 0 //threed
+        ogRowSeq = ogRowSeq.updated(87, 1) //ogRowSeq(87) = 1 //threedchange
+        Row(ogRowSeq)
+
+      case 2 =>
+        ogRowSeq = ogRowSeq.updated(51, 0)  //ogRowSeq(51) = 0 //threed
+        ogRowSeq = ogRowSeq.updated(87, 1) //ogRowSeq(87) = 1 //threedchange
+        Row(ogRowSeq)
+    }
   }
 }
-
-
 /*
 Input model in MLeap
 
