@@ -6,6 +6,11 @@ import ml.combust.mleap.runtime.frame.Row
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 
+import scala.concurrent.Future
+import scala.util.{Try,Success,Failure}
+
+//import scala.concurrent.ExecutionContext.Implicits.global
+
 //possible solution, probably not
 //import ai.x.play.json._
 //import ai.x.play.json.Jsonx
@@ -67,8 +72,8 @@ object OriginalTransaction {
         (JsPath \ "OriginalTransaction" \ "Card" \ "BinDetail" \ "CardBrand").format[String] and
         (JsPath \ "OriginalTransaction" \ "Card" \ "BinDetail" \ "IssuerCountryCode").format[String] and
         (JsPath \ "OriginalTransaction" \ "Card" \ "BinDetail" \ "IssuerCode").format[String] and
-        (JsPath \ "OriginalTransaction" \ "Card" \ "BinDetail" \ "CardSubTypeId").format[String] and
-        (JsPath \ "OriginalTransaction" \ "Card" \ "BinDetail" \ "IssuerTypeID").format[String] and
+        (JsPath \ "OriginalTransaction" \ "Card" \ "BinDetail" \ "CardSubtypeId").format[String] and
+        (JsPath \ "OriginalTransaction" \ "Card" \ "BinDetail" \ "IssuerTypeId").format[String] and
 
 
         (JsPath \ "OriginalTransaction" \ "Card" \ "BinInfo" \ "CardSchemaId").format[String] and
@@ -312,29 +317,28 @@ object OriginalTransaction {
     )
     frameType match {
       case 0 =>
-        Row(ogRowSeq)
+        Row(ogRowSeq: _*)
       // 1 channel moto (channel 2, channelchange 1 and threed 0 and threedchange 1 )
       // 2 remove threed (threed 0 and threedchange 1)
       case 1 =>
         //side effects hmmm
-        ogRowSeq = ogRowSeq.updated(15, 2)  //ogRowSeq(15) = 2 //channel
-        ogRowSeq = ogRowSeq.updated(93, 1)  //ogRowSeq(93) = 1 //channelchange
-        ogRowSeq = ogRowSeq.updated(51, 0)  //ogRowSeq(51) = 0 //threed
-        ogRowSeq = ogRowSeq.updated(87, 1) //ogRowSeq(87) = 1 //threedchange
-        Row(ogRowSeq)
+        ogRowSeq = ogRowSeq.updated(15, "2")  //ogRowSeq(15) = 2 //channel
+        ogRowSeq = ogRowSeq.updated(93, "1")  //ogRowSeq(93) = 1 //channelchange
+        ogRowSeq = ogRowSeq.updated(51, "0")  //ogRowSeq(51) = 0 //threed
+        ogRowSeq = ogRowSeq.updated(87, "1") //ogRowSeq(87) = 1 //threedchange
+        Row(ogRowSeq: _*)
 
       case 2 =>
-        ogRowSeq = ogRowSeq.updated(51, 0)  //ogRowSeq(51) = 0 //threed
-        ogRowSeq = ogRowSeq.updated(87, 1) //ogRowSeq(87) = 1 //threedchange
-        Row(ogRowSeq)
+        ogRowSeq = ogRowSeq.updated(51, "0")  //ogRowSeq(51) = 0 //threed
+        ogRowSeq = ogRowSeq.updated(87, "1") //ogRowSeq(87) = 1 //threedchange
+        Row(ogRowSeq: _*)
     }
   }
 
-  //we define the KV method here, this is still quite ugly, we repeat so much code aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  //we define the KV method here
   //for now this a testMethod, will need to be adapted afte we have a new API contract and new models
-  //we asume we have dealt with the fact that it is Future[Option[String]] here and we just have an Array[String]
 
-  def toRowKV(origTrx: OriginalTransaction, frameType: Int, kvArray: Array[String]): Row = {
+  def toRowKV(origTrx: OriginalTransaction, frameType: Int, kvArray: Array[String] ): Row = { //Array[String]
     var ogRowSeq = Seq("1", // approvalcode
       origTrx.info.currencyid, // originalcurrencyid
       origTrx.info.internalamount, // internalamount
@@ -393,10 +397,10 @@ object OriginalTransaction {
       origTrx.info.currentrank, // rank
       origTrx.info.previousresponsecode, // respcodeprevious
       "1", // cv2resultprevious
-      kvArray(0), // issuerprevious
-      kvArray(1), // threedprevious
-      kvArray(2), // channelprevious
-      kvArray(3), // channelsubtypeprevious
+      kvArray(0), //kvArray(0) onComplete {case Success(x) => x case Failure(z) => "1"}, //kvArray(0), // issuerprevious
+      kvArray(1),//kvArray(1) onComplete {case Success(x) => x case Failure(z) => "1"}, //kvArray(1), // threedprevious
+      kvArray(2),//kvArray(2) onComplete {case Success(x) => x case Failure(z) => "1"}, //kvArray(2), // channelprevious
+      kvArray(3),//kvArray(3) onComplete {case Success(x) => x case Failure(z) => "1"}, //kvArray(3), // channelsubtypeprevious
       "1", // transactiontypeidprevious
       "1", // authorizationtypeidprevious
       "1", // processoridprevious
@@ -433,21 +437,21 @@ object OriginalTransaction {
     )
     frameType match {
       case 0 =>
-        Row(ogRowSeq)
+        Row(ogRowSeq: _*)
       // 1 channel moto (channel 2, channelchange 1 and threed 0 and threedchange 1 )
       // 2 remove threed (threed 0 and threedchange 1)
       case 1 =>
         //side effects hmmm
-        ogRowSeq = ogRowSeq.updated(15, 2)  //ogRowSeq(15) = 2 //channel
-        ogRowSeq = ogRowSeq.updated(93, 1)  //ogRowSeq(93) = 1 //channelchange
-        ogRowSeq = ogRowSeq.updated(51, 0)  //ogRowSeq(51) = 0 //threed
-        ogRowSeq = ogRowSeq.updated(87, 1) //ogRowSeq(87) = 1 //threedchange
-        Row(ogRowSeq)
+        ogRowSeq = ogRowSeq.updated(15, "2")  //ogRowSeq(15) = 2 //channel
+        ogRowSeq = ogRowSeq.updated(93, "1")  //ogRowSeq(93) = 1 //channelchange
+        ogRowSeq = ogRowSeq.updated(51, "0")  //ogRowSeq(51) = 0 //threed
+        ogRowSeq = ogRowSeq.updated(87, "1") //ogRowSeq(87) = 1 //threedchange
+        Row(ogRowSeq: _*)
 
       case 2 =>
-        ogRowSeq = ogRowSeq.updated(51, 0)  //ogRowSeq(51) = 0 //threed
-        ogRowSeq = ogRowSeq.updated(87, 1) //ogRowSeq(87) = 1 //threedchange
-        Row(ogRowSeq)
+        ogRowSeq = ogRowSeq.updated(51, "0")  //ogRowSeq(51) = 0 //threed
+        ogRowSeq = ogRowSeq.updated(87, "1") //ogRowSeq(87) = 1 //threedchange
+        Row(ogRowSeq: _*)
     }
   }
 }

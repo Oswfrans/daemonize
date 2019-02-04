@@ -66,7 +66,6 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
     }
   }
 
-
   def index(): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request: Request[JsValue] =>
     request.body.validate[OriginalTransaction] match {
       case success: JsSuccess[OriginalTransaction] =>
@@ -78,35 +77,25 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
         //generate different candidate transactions here
         //we generate the default transaction if the currentrank is not too high
         //current implentation assumes a certain schema, if this changes we need to change the code
-        if ( OriginalTransaction.toRow(input, 0).getDouble(55) < 3.0 ) {
 
-          //will probably need to change the action to async???!!!!!!!!
+        if ( OriginalTransaction.toRow(input, 0).getDouble(55) < 3.0 ) {
 
           //we need to get the values for the keys
           //needs to be changed to something extracted from input!!
 
-          val testKey = "10000"
+          val testKey = "10001"
           val keyArray = for (a <- Array("a","b","c", "d")) yield testKey+a
-
-          //test both option and future option version !!!!!
-          def getValResolve(fut : Option[String] ) : String = {
-            fut.map(  value =>
-              value match {
-                case Some(x)   => {
-                  return x.toString
-                }
-                case None => {
-                  return 0.toString
-                }
-              }
-            )
-          }
 
           //not sure that this value deals properly with the Option?!!!!!!!!!!!!!
           //need to change getVal?????? and toRowKV ?????????????????????????????
-          val keyValArray = for (x <- keyArray) yield getValResolve( getVal( x) )
+          //val keyValArray = for (x <- keyArray) yield getValResolve( getVal( x) )
 
-          //based on this we pass these values to the adapted toRow method, create new toRow method
+          var keyValArray = for {
+            result1 <- getVal( testKey + "a").map( value => value match { case Some(x) => x.toString case None => 0.toString } )
+            result2 <- getVal( testKey + "b").map( value => value match { case Some(x) => x.toString case None => 0.toString } )
+            result3 <- getVal( testKey + "c").map( value => value match { case Some(x) => x.toString case None => 0.toString } )
+            result4 <- getVal( testKey + "d").map( value => value match { case Some(x) => x.toString case None => 0.toString } )
+          } yield Array(result1, result2, result3, result4)
 
           //question is how do we deal with the new ogtxn given that the model does not accept it?
           //for now just pass as the values we will not have in the new contract?
@@ -123,9 +112,14 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
 
           //so this a oneliner that does all the stuff we do below, but is much less readable. I feel conflicted
           val comprehensionArray = for (x <- Seq.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, x)))).get.dataset.head.getAs[Double](183)
+          println(comprehensionArray)
           //KV version
-          val comprehensionArrayKV = for (x <- Seq.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRowKV(input, x, keyValArray)))).get.dataset.head.getAs[Double](183)
+          val comprehensionArrayKV = keyValArray.map(ls => for (x <- Seq.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRowKV(input, x, ls )))).get.dataset.head.getAs[Double](183) )
+          //val comprehensionArrayKV = for (x <- Seq.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRowKV(input, x, keyValArray2 )))).get.dataset.head.getAs[Double](183)
 
+          comprehensionArrayKV.map(ls =>
+            Ok( Json.toJson(ApiResponse(ls.indexOf(ls.max) )) )
+          )
           /*
           //generate the different versions of the Row object
           val frame = DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, 0)))
@@ -144,51 +138,51 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
           val resultArray = List(result.getAs[Double](183), result2.getAs[Double](183), result3.getAs[Double](183) )
           val testArray = List(result.getAs[Double](183), 0.01, 0.02, 0.03)
           */
-
-          comprehensionArray.indexOf(comprehensionArray.max) match {
+          /*
+          comprehensionArrayKV.indexOf(comprehensionArrayKV.map(ls => ls.max) ) match {
             case 0 =>
               val changes = 0
-              Ok(Json.toJson(ApiResponse(changes))).as(JSON)
+              Future ( Json.toJson(ApiResponse(changes)) ).map(ft => Ok(ft))
+               //.as(JSON)
+              //Ok(Json.toJson(ApiResponse(changes))).as(JSON)
+              //Ok( Future( Json.toJson(ApiResponse(changes)) ) ).as(JSON)
+              //Ok(Json.toJson( Future( ApiResponse(changes)  ) )).as(JSON)
 
             case 1 =>
               val changes = 1
-              Ok(Json.toJson(ApiResponse(changes))).as(JSON)
-
+              Future ( Json.toJson(ApiResponse(changes)) ).map(ft => Ok(ft))
+            //Ok(Json.toJson(ApiResponse(changes))).as(JSON)
+            //Ok( Future( Json.toJson(ApiResponse(changes)) ) ).as(JSON)
+            //Ok(Json.toJson( Future( ApiResponse(changes)  ) )).as(JSON)
             case 2 =>
               val changes = 2
-              Ok(Json.toJson(ApiResponse(changes))).as(JSON)
-
+              Future ( Json.toJson(ApiResponse(changes)) ).map(ft => Ok(ft))
+            //Ok(Json.toJson(ApiResponse(changes))).as(JSON)
+            //Ok( Future( Json.toJson(ApiResponse(changes)) ) ).as(JSON)
+            //Ok(Json.toJson( Future( ApiResponse(changes)  ) )).as(JSON)
           }
+          */
         }
         else {
           val changes = 0
-          Ok(Json.toJson(ApiResponse(changes))).as(JSON)
+          Future ( Json.toJson(ApiResponse(changes)) ).map(ft => Ok(ft))
+          //Ok(Json.toJson(ApiResponse(changes))).as(JSON)
+          //Ok( Future( Json.toJson(ApiResponse(changes)) ) ).as(JSON)
+          //Ok(Json.toJson( Future( ApiResponse(changes)  ) )).as(JSON)
         }
 
         //val predictResultVal = result.getAs[Double](183) //getDouble(183) //current model has 183 values, change when we change schema
 
-        //based on the result we get we pass something to modifiedTransaction
-
-        //for now we hardcode
-        //1 no change , 2 change channel , 3 remove threed, 4 change channel & change threed
-        // if mcc changes happen you will pass 2 parameters
-        //val changes = 2
-
-        //Ok(Json.toJson(ApiResponse(changes))).as(JSON)
-        //Ok(Json.toJson(ModifiedTransaction(result))).as(JSON)
-
-      case e : JsError => BadRequest("Errors: " + JsError.toJson(e) ) //.toString())
+      //case e : JsError => BadRequest("Errors: " + JsError.toJson(e) ) //.toString())
+      //case e : JsError => BadRequest("Errors: " + JsError.toJson( Future( e ) ) )
+      case JsError(_) => Future("Invalid Input!").map(ft => BadRequest(ft) )
       //case JsError(_) => BadRequest("Invalid Input!")
     }
   }
 
 
-  //Array(0,1,2,3,4,5)
-  //Array int is the most efficient, still need to determine which approach is better
-  //new object or more keys
   def healthz() = Action.async {
     //insertKeyz()
-
 
     getVal("55555").map(  value =>
       value match {
