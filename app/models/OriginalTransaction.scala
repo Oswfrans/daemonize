@@ -22,6 +22,9 @@ case class OriginalCard( expirymonth: Double,
                          cv2response: String, //
                          avsthere: String,
 
+                         bin: String,
+                         holderip : String,
+
                          cardbrandbindetail : String,
                          issuercountrycodebindetail : String,
                          issuercodebindetail : String,
@@ -41,12 +44,23 @@ case class OriginalCard( expirymonth: Double,
                          issuercountrycode: String)
 
 case class OriginalMerchant(merchantcountrycode: String,
+                            processorid: String,
                             mcc: String,
                             mid: String ) //Memberid ??)
 
 case class OriginalInfo(currentrank: Double,
                         previousresponsecode: String,
                         //previousretryoptimizations, as what should we represent this?
+                        authorizationtype : String,
+                        channeltype: String,
+                        channelsubtype : String,
+                        transactionoriginatorid : String,
+                        credonfile: String,
+                        dwo : String,
+                        walletprovider: String,
+                        optchannel : String,
+                        optremovethreed: String,
+
                         internalamount: Double,
                         initialrecurring: String,
                         authdatetime: String,
@@ -69,10 +83,13 @@ object OriginalTransaction {
         (JsPath \ "OriginalTransaction" \ "Card" \ "Cv2Reponse").format[String] and
         (JsPath \ "OriginalTransaction" \ "Card" \ "AvsThere").format[String] and
 
+        (JsPath \ "OriginalTransaction" \ "Card" \ "Bin").format[String] and
+        (JsPath \ "OriginalTransaction" \ "Card" \ "HolderIp").format[String] and
+
         (JsPath \ "OriginalTransaction" \ "Card" \ "BinDetail" \ "CardBrand").format[String] and
         (JsPath \ "OriginalTransaction" \ "Card" \ "BinDetail" \ "IssuerCountryCode").format[String] and
         (JsPath \ "OriginalTransaction" \ "Card" \ "BinDetail" \ "IssuerCode").format[String] and
-        (JsPath \ "OriginalTransaction" \ "Card" \ "BinDetail" \ "CardSubtypeId").format[String] and
+        (JsPath \ "OriginalTransaction" \ "Card" \ "BinDetail" \ "CardSubtypeId").format[String] and //maybe need to change to SubtypeId
         (JsPath \ "OriginalTransaction" \ "Card" \ "BinDetail" \ "IssuerTypeId").format[String] and
 
 
@@ -80,6 +97,7 @@ object OriginalTransaction {
         (JsPath \ "OriginalTransaction" \ "Card" \ "BinInfo" \ "ServiceTypeId").format[String] and
         (JsPath \ "OriginalTransaction" \ "Card" \ "BinInfo" \ "IsCommercial").format[String] and
         (JsPath \ "OriginalTransaction" \ "Card" \ "BinInfo" \ "IsPrepaid").format[String] and
+        (JsPath \ "OriginalTransaction" \ "Card" \ "BinInfo" \ "IsPrivateLabel").format[String] and
         (JsPath \ "OriginalTransaction" \ "Card" \ "BinInfo" \ "IssuerCode").format[String] and
 
         (JsPath \ "OriginalTransaction" \ "Card" \ "BinInfo" \ "ProductCode").format[String] and
@@ -92,6 +110,7 @@ object OriginalTransaction {
   implicit val merchantFormat: Format[OriginalMerchant] = //Json.format[OriginalMerchant]
     (
       (JsPath \ "OriginalTransaction" \ "Merchant" \ "CountryCode").format[String] and
+        (JsPath \ "OriginalTransaction" \ "Merchant" \ "ProcesssorId").format[String] and
         (JsPath \ "OriginalTransaction" \ "Merchant" \ "CategoryCodeGroup").format[String] and
         (JsPath \ "OriginalTransaction" \ "Merchant" \ "MemberId").format[String]
       ) (OriginalMerchant.apply, unlift(OriginalMerchant.unapply))
@@ -100,6 +119,19 @@ object OriginalTransaction {
     (
       (JsPath \ "Retry" \ "CurrentRank").format[Double] and
         (JsPath \ "Retry" \ "PreviousResponseCode").format[String] and
+
+        (JsPath \ "EffectiveValues" \ "AuthorizationType").format[String] and
+        (JsPath \ "EffectiveValues" \ "Channeltype").format[String] and
+        (JsPath \ "EffectiveValues" \ "ChannelSubtype").format[String] and
+
+        (JsPath \ "TransactionOriginatorId" ).format[String] and
+
+        (JsPath \ "EffectiveValues" \ "CredentialOnFileType").format[String] and
+        (JsPath \ "EffectiveValues" \ "DwoIndicator").format[String] and
+        (JsPath \ "EffectiveValues" \ "WalletProvider").format[String] and
+
+        (JsPath \ "Retry" \ "PreviousRetryOptimization" \ "Optimizations" \ "channel" ).format[String] and  //need to think what to do if this is not here?
+        (JsPath \ "Retry" \ "PreviousRetryOptimization" \  "Optimizations" \ "removeThreeD" ).format[String] and //need to think what to do if this is not here?
 
         (JsPath \ "OriginalTransaction" \ "InternalAmount").format[Double] and
         (JsPath \ "OriginalTransaction" \ "InitialRecurring").format[String] and
