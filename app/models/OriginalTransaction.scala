@@ -9,13 +9,6 @@ import play.api.libs.functional.syntax._
 import scala.concurrent.Future
 import scala.util.{Try,Success,Failure}
 
-//import scala.concurrent.ExecutionContext.Implicits.global
-
-//possible solution, probably not
-//import ai.x.play.json._
-//import ai.x.play.json.Jsonx
-//import julienrf.json.derived
-
 case class OriginalCard( expirymonth: Double,
                          expiryyear: Double,
                          cv2resulttype: String, //
@@ -46,7 +39,7 @@ case class OriginalCard( expirymonth: Double,
 case class OriginalMerchant(merchantcountrycode: String,
                             processorid: String,
                             mcc: String,
-                            mid: String ) //Memberid ??)
+                            memberid: String ) //Memberid ??)
 
 case class OriginalInfo(currentrank: Double,
                         previousresponsecode: String,
@@ -130,8 +123,8 @@ object OriginalTransaction {
         (JsPath \ "EffectiveValues" \ "DwoIndicator").format[String] and
         (JsPath \ "EffectiveValues" \ "WalletProvider").format[String] and
 
-        (JsPath \ "Retry" \ "PreviousRetryOptimization" \ "Optimizations" \ "channel" ).format[String] and  //need to think what to do if this is not here?
-        (JsPath \ "Retry" \ "PreviousRetryOptimization" \  "Optimizations" \ "removeThreeD" ).format[String] and //need to think what to do if this is not here?
+        (JsPath \ "Retry" \ "PreviousRetryOptimization" \ "Optimizations" \ "channel" ).format[String]  or Reads.pure("")  and  //need to think what to do if this is not here?
+        (JsPath \ "Retry" \ "PreviousRetryOptimization" \  "Optimizations" \ "removeThreeD" ).format[String] Reads.pure("") and //need to think what to do if this is not here?
 
         (JsPath \ "OriginalTransaction" \ "InternalAmount").format[Double] and
         (JsPath \ "OriginalTransaction" \ "InitialRecurring").format[String] and
@@ -260,20 +253,20 @@ object OriginalTransaction {
       origTrx.info.transactiontypeid, // transactiontypeid
       "1", // cardid
       "1", // merchantaccountid
-      "1", // memberid
-      "1", // transactionoriginatorid
-      "1", // detailedcode
-      "1", // firstsixdigits
+      origTrx.merchant.memberid, // memberid
+      origTrx.info.transactionoriginatorid, // transactionoriginatorid
+      origTrx.info.previousresponsecode, // detailedcode
+      origTrx.bin, // firstsixdigits
       origTrx.card.cv2response, // cvvresponse
-      "1", // authorizationtypeid
+      origTrx.info.authorizationtype, // authorizationtypeid
       origTrx.info.channel, // channel
-      "1", // channelsubtype
+      origTrx.info.channelsubtype, // channelsubtype
       origTrx.info.initialrecurring, // initialrecurring
       origTrx.merchant.merchantcountrycode, // merchantcountrycode
-      "1", // originalauthenticationindicator
+      origTrx.info.eci, // originalauthenticationindicator
       "1", // authenticationvalue
-      origTrx.merchant.mid, // mid
-      "1", // processorid
+      "1", // mid
+      origTrx.merchant.processorid, // processorid
       origTrx.merchant.mcc, // categorycodegroup
       origTrx.card.cardbrandbindetail, // cardbrand
       origTrx.card.issuercodebindetail, // issuercountrycode , is this the bin detail info?
@@ -283,7 +276,7 @@ object OriginalTransaction {
       origTrx.card.issuertypeidbindetail, // issuertypeid
       origTrx.card.cardcommercial, // cardcommercial
       origTrx.card.cardprepaid, // cardprepaid
-      "1", // originalbin
+      origTrx.card.bin, // originalbin
       "1", // authweekofyear
       origTrx.info.authdatetime.substring(11, 13), // authhour
       "1", // retryoptimization , need to parse the JSON better
@@ -302,7 +295,7 @@ object OriginalTransaction {
       origTrx.info.authdatetime.substring(0, 4), // authyear
       origTrx.info.authdatetime.substring(5, 7), // authmonth
       origTrx.info.authdatetime.substring(8, 10), // authday
-      "1", // threeD
+      origTrx.eci, // threeD //!!!!!! double check format is correct
       "1", //origTrx.card.expiryyear.toString.concat("-").concat(origTrx.card.expirymonth.toString) ,   // cardexpirydate NEED to asses proper format
       "1", // succeeded
       "1", // succeededrank
