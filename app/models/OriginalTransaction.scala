@@ -28,6 +28,7 @@ case class OriginalCard( expirymonth: Double,
                          servicetypeid: String,
                          cardcommercial: String,
                          cardprepaid: String,
+                         privatelabel: String,
                          issuercode: String,
 
                          productcode : String,
@@ -103,7 +104,7 @@ object OriginalTransaction {
   implicit val merchantFormat: Format[OriginalMerchant] = //Json.format[OriginalMerchant]
     (
       (JsPath \ "OriginalTransaction" \ "Merchant" \ "CountryCode").format[String] and
-        (JsPath \ "OriginalTransaction" \ "Merchant" \ "ProcesssorId").format[String] and
+        (JsPath \ "OriginalTransaction" \ "Merchant" \ "ProcessorId").format[String] and
         (JsPath \ "OriginalTransaction" \ "Merchant" \ "CategoryCodeGroup").format[String] and
         (JsPath \ "OriginalTransaction" \ "Merchant" \ "MemberId").format[String]
       ) (OriginalMerchant.apply, unlift(OriginalMerchant.unapply))
@@ -117,14 +118,14 @@ object OriginalTransaction {
         (JsPath \ "EffectiveValues" \ "Channeltype").format[String] and
         (JsPath \ "EffectiveValues" \ "ChannelSubtype").format[String] and
 
-        (JsPath \ "TransactionOriginatorId" ).format[String] and
+        (JsPath \ "OriginalTransaction" \  "TransactionOriginatorId" ).format[String] and
 
         (JsPath \ "EffectiveValues" \ "CredentialOnFileType").format[String] and
         (JsPath \ "EffectiveValues" \ "DwoIndicator").format[String] and
         (JsPath \ "EffectiveValues" \ "WalletProvider").format[String] and
 
-        (JsPath \ "Retry" \ "PreviousRetryOptimization" \ "Optimizations" \ "channel" ).format[String]  or Reads.pure("")  and  //need to think what to do if this is not here?
-        (JsPath \ "Retry" \ "PreviousRetryOptimization" \  "Optimizations" \ "removeThreeD" ).format[String] Reads.pure("") and //need to think what to do if this is not here?
+        (JsPath \ "Retry" \ "PreviousRetryOptimization" \ "Optimizations" \ "channel" ).formatNullable[String].inmap[String](_.getOrElse(""), Some(_)) and   //.format[String]  or Formats.pure("")  and  //need to think what to do if this is not here?
+        (JsPath \ "Retry" \ "PreviousRetryOptimization" \  "Optimizations" \ "removeThreeD" ).formatNullable[String].inmap[String](_.getOrElse(""), Some(_)) and //.format[String] or Formats.pure("") and //need to think what to do if this is not here?
 
         (JsPath \ "OriginalTransaction" \ "InternalAmount").format[Double] and
         (JsPath \ "OriginalTransaction" \ "InitialRecurring").format[String] and
@@ -243,12 +244,19 @@ object OriginalTransaction {
   //very happy with the current implementation that takes one Seq and then adepts it :)
   //will need to adept this code after talking to Jorge
 
-  def toRow(origTrx: OriginalTransaction, frameType: Int): Row = {
+  //38 values
+  implicit val sessionValues = Array("1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1","1", "1", "1", "1","1", "1", "1", "1","1", "1", "1", "1","1", "1", "1", "1","1", "1", "1", "1","1", "1", "1", "1", "1", "!")
+  implicit val kvArray = Array("1", "1", "1", "!")
+
+    //will need to properly deal with this in the homecontroller
+    //dropping the values or passing it to another model etc.
+
+  def toRow(origTrx: OriginalTransaction, frameType: Int, implicit sessionValues: Array[String], implicit kvArray: Array[String]): Row = {
     var ogRowSeq = Seq("1", // approvalcode
       origTrx.info.currencyid, // originalcurrencyid
       origTrx.info.internalamount, // internalamount
       origTrx.info.authdatetime.substring(0, 10), // authdate
-      "1", // authtimestamp
+      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.parse(origTrx.info.authdatetime, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")) ) , // authtimestamp
       "1", // authresult
       origTrx.info.transactiontypeid, // transactiontypeid
       "1", // cardid
@@ -256,7 +264,7 @@ object OriginalTransaction {
       origTrx.merchant.memberid, // memberid
       origTrx.info.transactionoriginatorid, // transactionoriginatorid
       origTrx.info.previousresponsecode, // detailedcode
-      origTrx.bin, // firstsixdigits
+      origTrx.card.bin, // firstsixdigits
       origTrx.card.cv2response, // cvvresponse
       origTrx.info.authorizationtype, // authorizationtypeid
       origTrx.info.channel, // channel
@@ -295,7 +303,7 @@ object OriginalTransaction {
       origTrx.info.authdatetime.substring(0, 4), // authyear
       origTrx.info.authdatetime.substring(5, 7), // authmonth
       origTrx.info.authdatetime.substring(8, 10), // authday
-      origTrx.eci, // threeD //!!!!!! double check format is correct
+      origTrx.info.eci, // threeD //!!!!!! double check format is correct
       "1", //origTrx.card.expiryyear.toString.concat("-").concat(origTrx.card.expirymonth.toString) ,   // cardexpirydate NEED to asses proper format
       "1", // succeeded
       "1", // succeededrank
@@ -363,7 +371,11 @@ object OriginalTransaction {
   //we define the KV method here
   //for now this a testMethod, will need to be adapted afte we have a new API contract and new models
 
-  def toRowKV(origTrx: OriginalTransaction, frameType: Int, kvArray: Array[String] ): Row = { //Array[String]
+  //for now this is commented out, because implicit vals should be ok to only have one method
+  //however we will need to deal with it in the controller
+  //dropping the values or passing it to another model etc.
+  /*
+  def toRowKV(origTrx: OriginalTransaction, frameType: Int, implicit sessionValues: Array[String], kvArray: Array[String] ): Row = { //Array[String]
     var ogRowSeq = Seq("1", // approvalcode
       origTrx.info.currencyid, // originalcurrencyid
       origTrx.info.internalamount, // internalamount
@@ -373,20 +385,20 @@ object OriginalTransaction {
       origTrx.info.transactiontypeid, // transactiontypeid
       "1", // cardid
       "1", // merchantaccountid
-      "1", // memberid
-      "1", // transactionoriginatorid
-      "1", // detailedcode
-      "1", // firstsixdigits
+      origTrx.merchant.memberid, // memberid
+      origTrx.info.transactionoriginatorid, // transactionoriginatorid
+      origTrx.info.previousresponsecode, // detailedcode
+      origTrx.card.bin, // firstsixdigits
       origTrx.card.cv2response, // cvvresponse
-      "1", // authorizationtypeid
+      origTrx.info.authorizationtype, // authorizationtypeid
       origTrx.info.channel, // channel
-      "1", // channelsubtype
+      origTrx.info.channelsubtype, // channelsubtype
       origTrx.info.initialrecurring, // initialrecurring
       origTrx.merchant.merchantcountrycode, // merchantcountrycode
-      "1", // originalauthenticationindicator
+      origTrx.info.eci, // originalauthenticationindicator
       "1", // authenticationvalue
-      origTrx.merchant.mid, // mid
-      "1", // processorid
+      "1", // mid
+      origTrx.merchant.processorid, // processorid
       origTrx.merchant.mcc, // categorycodegroup
       origTrx.card.cardbrandbindetail, // cardbrand
       origTrx.card.issuercodebindetail, // issuercountrycode , is this the bin detail info?
@@ -396,7 +408,7 @@ object OriginalTransaction {
       origTrx.card.issuertypeidbindetail, // issuertypeid
       origTrx.card.cardcommercial, // cardcommercial
       origTrx.card.cardprepaid, // cardprepaid
-      "1", // originalbin
+      origTrx.card.bin, // originalbin
       "1", // authweekofyear
       origTrx.info.authdatetime.substring(11, 13), // authhour
       "1", // retryoptimization , need to parse the JSON better
@@ -415,17 +427,17 @@ object OriginalTransaction {
       origTrx.info.authdatetime.substring(0, 4), // authyear
       origTrx.info.authdatetime.substring(5, 7), // authmonth
       origTrx.info.authdatetime.substring(8, 10), // authday
-      "1", // threeD
+      origTrx.info.eci, // threeD //!!!!!! double check format is correct
       "1", //origTrx.card.expiryyear.toString.concat("-").concat(origTrx.card.expirymonth.toString) ,   // cardexpirydate NEED to asses proper format
       "1", // succeeded
       "1", // succeededrank
       origTrx.info.currentrank, // rank
       origTrx.info.previousresponsecode, // respcodeprevious
       "1", // cv2resultprevious
-      kvArray(0), //kvArray(0) onComplete {case Success(x) => x case Failure(z) => "1"}, //kvArray(0), // issuerprevious
-      kvArray(1),//kvArray(1) onComplete {case Success(x) => x case Failure(z) => "1"}, //kvArray(1), // threedprevious
-      kvArray(2),//kvArray(2) onComplete {case Success(x) => x case Failure(z) => "1"}, //kvArray(2), // channelprevious
-      kvArray(3),//kvArray(3) onComplete {case Success(x) => x case Failure(z) => "1"}, //kvArray(3), // channelsubtypeprevious
+      "1", // issuerprevious
+      "1", // threedprevious
+      "1", // channelprevious
+      "1", // channelsubtypeprevious
       "1", // transactiontypeidprevious
       "1", // authorizationtypeidprevious
       "1", // processoridprevious
@@ -479,6 +491,7 @@ object OriginalTransaction {
         Row(ogRowSeq: _*)
     }
   }
+  /*
 }
 /*
 Input model in MLeap
