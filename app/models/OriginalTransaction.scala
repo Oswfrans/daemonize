@@ -8,6 +8,7 @@ import play.api.libs.functional.syntax._
 
 import scala.concurrent.Future
 import scala.util.{Try,Success,Failure}
+import java.time._
 
 case class OriginalCard( expirymonth: Double,
                          expiryyear: Double,
@@ -63,9 +64,14 @@ case class OriginalInfo(currentrank: Double,
                         eci: String,
                         currencyid: String)
 
+case class IDInformation(requestid: String,
+                         sessionid: String)
+
 case class OriginalTransaction(card: OriginalCard,
                                merchant: OriginalMerchant,
-                               info: OriginalInfo)
+                               info: OriginalInfo,
+                               id : IDInformation)
+
 
 object OriginalTransaction {
 
@@ -118,14 +124,14 @@ object OriginalTransaction {
         (JsPath \ "EffectiveValues" \ "Channeltype").format[String] and
         (JsPath \ "EffectiveValues" \ "ChannelSubtype").format[String] and
 
-        (JsPath \ "OriginalTransaction" \  "TransactionOriginatorId" ).format[String] and
+        (JsPath \ "OriginalTransaction" \ "TransactionOriginatorId").format[String] and
 
         (JsPath \ "EffectiveValues" \ "CredentialOnFileType").format[String] and
         (JsPath \ "EffectiveValues" \ "DwoIndicator").format[String] and
         (JsPath \ "EffectiveValues" \ "WalletProvider").format[String] and
 
-        (JsPath \ "Retry" \ "PreviousRetryOptimization" \ "Optimizations" \ "channel" ).formatNullable[String].inmap[String](_.getOrElse(""), Some(_)) and   //.format[String]  or Formats.pure("")  and  //need to think what to do if this is not here?
-        (JsPath \ "Retry" \ "PreviousRetryOptimization" \  "Optimizations" \ "removeThreeD" ).formatNullable[String].inmap[String](_.getOrElse(""), Some(_)) and //.format[String] or Formats.pure("") and //need to think what to do if this is not here?
+        (JsPath \ "Retry" \ "PreviousRetryOptimization" \ "Optimizations" \ "channel").formatNullable[String].inmap[String](_.getOrElse(""), Some(_)) and //.format[String]  or Formats.pure("")  and  //need to think what to do if this is not here?
+        (JsPath \ "Retry" \ "PreviousRetryOptimization" \ "Optimizations" \ "removeThreeD").formatNullable[String].inmap[String](_.getOrElse(""), Some(_)) and //.format[String] or Formats.pure("") and //need to think what to do if this is not here?
 
         (JsPath \ "OriginalTransaction" \ "InternalAmount").format[Double] and
         (JsPath \ "OriginalTransaction" \ "InitialRecurring").format[String] and
@@ -136,10 +142,17 @@ object OriginalTransaction {
         (JsPath \ "OriginalTransaction" \ "CurrencyId").format[String]
       ) (OriginalInfo.apply, unlift(OriginalInfo.unapply))
 
+  implicit val idFormat: Format[IDInformation] = //Json.format[OriginalMerchant]
+    (
+      (JsPath \ "OriginalTransaction" \ "RequestCorrelationId" ).format[String] and
+        (JsPath \ "OriginalTransaction" \ "SessionCorrelationId").format[String]
+      ) (IDInformation.apply, unlift(IDInformation.unapply))
+
   implicit val inputForm: Format[OriginalTransaction] = (
     (JsPath).format[OriginalCard] and
       (JsPath).format[OriginalMerchant] and
-      (JsPath).format[OriginalInfo]
+      (JsPath).format[OriginalInfo] and
+      (JsPath).format[IDInformation]
     ) (OriginalTransaction.apply, unlift(OriginalTransaction.unapply))
 
   val schema: StructType = StructType(
@@ -240,23 +253,30 @@ object OriginalTransaction {
     StructField("doublelabel", ScalarType.Double)
   ).get
 
+  def toRowID(origTrx: OriginalTransaction) : Row = {
+    var ogRowSeq = Seq(
+      origTrx.id.requestid , // originalcurrencyid
+      origTrx.id.sessionid // internalamount
+    )
+    Row(ogRowSeq: _*)
+  }
 
   //very happy with the current implementation that takes one Seq and then adepts it :)
   //will need to adept this code after talking to Jorge
 
   //38 values
-  implicit val sessionValues = Array("1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1","1", "1", "1", "1","1", "1", "1", "1","1", "1", "1", "1","1", "1", "1", "1","1", "1", "1", "1","1", "1", "1", "1", "1", "!")
-  implicit val kvArray = Array("1", "1", "1", "!")
+  //implicit val sessionValues = Array("1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1")
+  //implicit val kvArray = Array("1", "1", "1", "1")
 
-    //will need to properly deal with this in the homecontroller
-    //dropping the values or passing it to another model etc.
+  //will need to properly deal with this in the homecontroller
+  //dropping the values or passing it to another model etc.
 
-  def toRow(origTrx: OriginalTransaction, frameType: Int, implicit sessionValues: Array[String], implicit kvArray: Array[String]): Row = {
+  def toRow(origTrx: OriginalTransaction, frameType: Int , sessionValues: Array[String]  , kvArray: Array[String] ): Row = {
     var ogRowSeq = Seq("1", // approvalcode
       origTrx.info.currencyid, // originalcurrencyid
       origTrx.info.internalamount, // internalamount
       origTrx.info.authdatetime.substring(0, 10), // authdate
-      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.parse(origTrx.info.authdatetime, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")) ) , // authtimestamp
+      java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.parse(origTrx.info.authdatetime, java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'"))), // authtimestamp
       "1", // authresult
       origTrx.info.transactiontypeid, // transactiontypeid
       "1", // cardid
@@ -355,22 +375,21 @@ object OriginalTransaction {
       // 2 remove threed (threed 0 and threedchange 1)
       case 1 =>
         //side effects hmmm
-        ogRowSeq = ogRowSeq.updated(15, "2")  //ogRowSeq(15) = 2 //channel
-        ogRowSeq = ogRowSeq.updated(93, "1")  //ogRowSeq(93) = 1 //channelchange
-        ogRowSeq = ogRowSeq.updated(51, "0")  //ogRowSeq(51) = 0 //threed
+        ogRowSeq = ogRowSeq.updated(15, "2") //ogRowSeq(15) = 2 //channel
+        ogRowSeq = ogRowSeq.updated(93, "1") //ogRowSeq(93) = 1 //channelchange
+        ogRowSeq = ogRowSeq.updated(51, "0") //ogRowSeq(51) = 0 //threed
         ogRowSeq = ogRowSeq.updated(87, "1") //ogRowSeq(87) = 1 //threedchange
         Row(ogRowSeq: _*)
 
       case 2 =>
-        ogRowSeq = ogRowSeq.updated(51, "0")  //ogRowSeq(51) = 0 //threed
+        ogRowSeq = ogRowSeq.updated(51, "0") //ogRowSeq(51) = 0 //threed
         ogRowSeq = ogRowSeq.updated(87, "1") //ogRowSeq(87) = 1 //threedchange
         Row(ogRowSeq: _*)
     }
   }
 
   //we define the KV method here
-  //for now this a testMethod, will need to be adapted afte we have a new API contract and new models
-
+  //for now this a testMethod, will need to be adapted after we have a new API contract and new models
   //for now this is commented out, because implicit vals should be ok to only have one method
   //however we will need to deal with it in the controller
   //dropping the values or passing it to another model etc.
@@ -491,7 +510,7 @@ object OriginalTransaction {
         Row(ogRowSeq: _*)
     }
   }
-  /*
+  */
 }
 /*
 Input model in MLeap

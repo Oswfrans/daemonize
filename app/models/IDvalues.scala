@@ -1,5 +1,6 @@
 package models
 
+/*
 import ml.combust.mleap.core.types.{ScalarType, StructField, StructType}
 import ml.combust.mleap.runtime.frame.Row
 
@@ -21,7 +22,7 @@ object IDvalues {
       ) (IDInformation.apply, unlift(IDInformation.unapply))
 
 
-  def toRow(idV: IDvalues): Row = {
+  def toRow(idV: IDInformation): Row = { //IDvalues ???
     var ogRowSeq = Seq(
       idV.requestid , // originalcurrencyid
       idV.sessionid // internalamount
@@ -29,3 +30,4 @@ object IDvalues {
       Row(ogRowSeq: _*)
   }
 }
+*/

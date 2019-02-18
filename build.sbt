@@ -16,6 +16,7 @@ libraryDependencies ++= Seq(
   "org.julienrf" %% "play-json-derived-codecs" % "4.0.1",
   "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % Test,
   "com.github.mingchuno" %% "etcd4s-core" % "0.1.4",
+  "io.github.cquiroz" %% "scala-java-time" % "2.0.0-RC1",
   "net.nikore.etcd" %% "scala-etcd" % "0.8"
 
 
