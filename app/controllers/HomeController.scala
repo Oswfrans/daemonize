@@ -65,7 +65,7 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
       port = 2379
     )
     val client = Etcd4sClient.newClient(config)
-    for( i <- 1 to 25000) {
+    for( i <- 1 to 2000) {
       for (x <- Array("a", "b", "c", "d")) {
         val key = i.toString+x
         val value = (i).toString
@@ -76,7 +76,7 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
 
   def kvFunction(fraudFlag: Int) : scala.concurrent.Future[Array[String]] = {
     if (fraudFlag==1) {
-      val testKey = "10001"
+      val testKey = "1001"
       val keyArray = for (a <- Array("a","b","c", "d")) yield testKey+a
 
       val keyValArray = for {
@@ -88,6 +88,7 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
 
       // we set new values for the key
       // needs to be changed to be something derived from input!!!!
+      //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       for (x <- keyArray) {
         setKey(x, "7")
       }
@@ -100,6 +101,8 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
 
 
   def renameLater(initFrame: Row, sessID : String) : Array[String] = {
+
+    val timeForm = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
     if ( initFrame.getDouble(55) == 1.0 ) {
 
@@ -126,9 +129,6 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
         if (initFrame.getString(51)=="NULL" || initFrame.getString(51)=="" ) "0" else "1" //threedthere
       )
 
-      //all the previous values for the session, so the current session
-      //these two will be either discarded or kept blank
-      var previousArray = Array()
       //defaultvalues for initial
       //threedtherechange cv2change authdatesecondsdiff issuerchange  threedchange  categorycodegroupchange avstherechange  authorizationtypeidchange processoridchange channelsubtypechange  channelchange
       var changeArray = Array("0","0","0","0","0","0","0","0","0","0","0")
@@ -153,59 +153,80 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
       val valuesArray : Array[String] = previousArrayNew ++ firstArray ++ thereArray ++ changeArray
       var setString : String = (previousArrayNew ++ firstArray ++ thereArray ++ changeArray).mkString(",")
 
-      //need to still deal with a future, because we need to update the current sessions value with the append
-      //or do we even do this in this case???????????????????????????????????
-      //I do not know , I think we do to ensure the shortness of the KV, because that is a concern
-      //and the date pop still
-
       //get previous sessionString
       val prevSess = getVal("sessions").map(value => value match
       {case Some(x) => x.toString
         case None => "" } )
 
+      //println(prevSess.getClass)
+      //println(prevSess)
+
       //instantiate newString
       var newString = ""
+      var trueSetString = ""
+      var set=0
+      //val timeForm = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
-      //change this !!!!!!!!!!!!!!!!!!!!!!!!
-      //I think we need a case if it is empty or maybe do that before
       //combining side-effects with futures makes me slightly quesy!!!!!!!!!!!!!!!!!
-      //!!!!!!!!!!!!!! Stackoverflow search needed!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      //this logic loop can be refactored!
       prevSess.map(ps =>
-        breakable {
-          for (x <- ps.split("\\|")) {
-            if (java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now.plusMinutes(10)) > x.split(",")(1)) {
-              //remove the session from string
-              newString = ps.split("\\|").drop(1).mkString("\\|")
+        if (ps == "") {
+          trueSetString = sessID + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString
+          //assert(trueSetString != "")
+          setKey("sessions",  trueSetString + "|" + trueSetString)
+        }
+        else {
+          println(ps)
+          breakable {
+            for (x <- ps.split("\\|") ) {
+              println("here3")
+              val parseTime : String = x.split(",")(1)
+              if ( java.time.LocalDateTime.now.isAfter(java.time.LocalDateTime.parse(parseTime, timeForm).plusMinutes(10) ) ) {  //timeForm.parse(x.split(",")(1)).plusMinutes(10)  ) {
+              //if (java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now.plusMinutes(10)) > x.split(",")(1)) {
+              //if (java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now) > x.split(",")(1).plusMinutes(10)) {
+                //remove the session from string
+                newString = if (newString == "") ps.split("\\|").drop(1).mkString("\\|") else newString.split("\\|").drop(1).mkString("\\|")
 
-              //update the string in the KV store
-              //Do we need to do the update here??????????
-              //could be case of unnecessary updates!!!!!!!!!!!!!!!!!!!!!!!
-              //SO side effects and futures
-              setKey("session", newString)
-            }
-            else {
-              break
+                //update the string in the KV store
+                //could be case of unnecessary updates!!!!!!!!!!!!!!!!!!!!!!!
+                //do not hink there is a side-effect problem. The problem lies in the fact these updates could be not needed + how eventual updates are resolved
+                //setKey("sessions", newString)
+                println("here1")
+
+              }
+              else {
+                println("here2")
+                //val trueSetString = if (newString=="") ps + "|" + sessID + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString else newString + "|" + sessID + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString
+                trueSetString = if (newString == "") ps + "|" + sessID + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString else newString + "|" + sessID + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString
+                set=1
+                //assert(trueSetString != "")
+                setKey("sessions", trueSetString)
+                break
+              }
             }
           }
         }
-        // value setKey is not a member of Unit
-        //[error] possible cause: maybe a semicolon is missing before `value setKey'?
-        //setKey("session",  ( ps + "|" + OriginalTransaction.toRowID(input).getString(1) + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString ) )
       )
-
-      //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      //potential problem with having two future resulotions instead of one, is that one setKey overwrites the other
-
-      prevSess.map(ps =>
-        //val newValueString = ps + "|" + OriginalTransaction.toRowID(input).getString(1) + "," + DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now).toString + "," + setString
-        setKey("session",  ps + "|" + sessID + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString )
-        //setKey("session",  ps + "|" + OriginalTransaction.toRowID(input).getString(1) + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString )
-      )
+      if (set==0) {
+        println("here4")
+        setKey("sessions", newString + "|" + sessID + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString )
+      }
 
       //so newValuesArray is what you pass to the model(s) and newValueString is what you store in the KV store
       //newValuesArray = valuesArray
-
       return valuesArray
+      /*
+      if (trueSetString != "") {
+        return valuesArray
+      }
+      else {
+        Thread.sleep(10000)
+        assert(trueSetString != "")
+        return valuesArray
+      }
+      */
+
+
     }
     else {
       //get values from KV store
@@ -217,31 +238,34 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
       //instantiate newString
       var newString = ""
       var newValuesArray = Array("")
-      //define new values to save here??
-      //or in future map?
-
-      //!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      //can we do a side effect as a consequence of a future???
-      //this seems very supsect!!!!!!
+      var newValueString = ""
 
       //we need to break if we find a match that is not too late
       //bit ugly, but alternatives are meh https://stackoverflow.com/questions/2742719/how-do-i-break-out-of-a-loop-in-scala
 
+      //can refactor this !
       //parse string and check if we should pop stuff off
       prevSess.map(ps =>
         breakable { for (x <- ps.split("\\|")) {
-          if (java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now.plusMinutes(10)) > x.split(",")(1) ) {
+          val parseTime : String = x.split(",")(1)
+          if ( java.time.LocalDateTime.now.isAfter(java.time.LocalDateTime.parse(parseTime, timeForm).plusMinutes(10) ) ) {
+            //if (java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now.plusMinutes(10)) > java.time.LocalDateTime.parse(x.split(",")(1), java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss") ) ) {
+            //if (java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now.plusMinutes(10)) > x.split(",")(1) ) {
             //remove the session from string
-            newString = ps.split("\\|").drop(1).mkString("\\|")
+            newString = if (newString=="") ps.split("\\|").drop(1).mkString("\\|") else newString.split("\\|").drop(1).mkString("\\|")
+
             //update the string in the KV store
-            setKey("session",  newString)
+            //could be case of unnecessary updates!!!!!!!!!!!!!!!!!!!!!!!
+            //do not hink there is a side-effect problem. The problem lies in the fact these updates could be not needed + how eventual updates are resolved
+            //setKey("session", newString)
           }
           else if ( ( sessID == x.split(",")(0) ) ) {
           //else if ( (OriginalTransaction.toRowID(input)).get(1).asInstanceOf[String] == x.split(",")(0) ) {
             //get values
             var valuesArray = x.split(",").drop(2) //what type is this? // I think array
             //remove the session from string
-            newString = ps.split("\\|").drop(1).mkString("\\|")
+            newString = if (newString=="") ps.split("\\|").drop(1).mkString("\\|") else newString.split("\\|").drop(1).mkString("\\|")
+            //ps.split("\\|").drop(1).mkString("\\|")
 
             //so we get the values from the previous session that we will pass to create one or two frames
             //now we need to append a new string to value of session
@@ -292,14 +316,13 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
 
             //now Timestamp
             val now = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now)
-            //sessionid
-            //val sessionID = OriginalTransaction.toRowID(input).getString(1)
-
-            //put these new values in front of the newString
 
             //create the new value to set
-            val newValueString = ps + "|" + sessID + "," + now.toString + "," + setString
-            setKey("session",  newValueString)
+            newValueString = newString + "|" + sessID + "," + now.toString + "," + setString
+
+            //val newValueString = newString + "|" + sessID + "," + now.toString + "," + setString
+            //assert(newValueString != "")
+            setKey("sessions",  newValueString)
 
             break
           }
@@ -310,7 +333,16 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
         }
         }
       )
-      return newValuesArray
+      //assert is kept during testing
+      assert(newValuesArray != Array("") )
+
+      if (newValuesArray != Array("") ) {
+        return newValuesArray
+      }
+      else {
+        Thread.sleep(10)
+        return newValuesArray
+      }
     }
 
   }
@@ -356,12 +388,6 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
         val initFrame = OriginalTransaction.toRow(input, 0, sessionValuesDefault, kvArrayDefault)
 
         if ( initFrame.getDouble(55) < 3.0 ) {
-
-          //we need to get the values for the keys
-          //needs to be changed to something extracted from input!!
-
-          //var keyValArray = Future( Array("") ) //Array("")
-          //var newValuesArray = Array("") //Future( Array("") ) //Array("")
 
           /*
           if (fraudCheck==1) {
@@ -598,23 +624,18 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
 
 
           //val comprehensionArray = if (fraudCheck ==1) newValuesArray.flatMap ( vs => keyValArray.map(ls => for (x <- Seq.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, x,vs,ls  ) )).get.dataset.head.getAs[Double](183) ) ) else newValuesArray.map(vs  => for (x <- Seq.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, x,vs, kvArrayDefault ))).get.dataset.head.getAs[Double](183) )
-
           //function version
           val kvArray = kvFunction(fraudCheck)
           val iterArray = renameLater(initFrame, sessionID)
+
+          //iterArray.foreach(println)
+
           val comprehensionArray : scala.concurrent.Future[List[Double]] = if (fraudCheck ==1) kvArray.map(ls => for (x <- List.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, x, iterArray,ls  ) ) ) ).get.dataset.head.getAs[Double](183) ) else scala.concurrent.Future( for (x <- List.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, x, iterArray, kvArrayDefault ) ) ) ).get.dataset.head.getAs[Double](183) )
-          //val comprehensionArray2 = scala.concurrent.Future(comprehensionArray)
-          //val comprehensionArray = if (fraudCheck ==1) iterArray.map ( vs => kvArray.map(ls => for (x <- Seq.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, x,vs,ls  ) )).get.dataset.head.getAs[Double](183) ) ) ) else iterArray.map(vs  => for (x <- Seq.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, x,vs, kvArrayDefault ))).get.dataset.head.getAs[Double](183) ) )
-          //val comprehensionArray = if (fraudCheck ==1) kvArray.map(ls => for (x <- Seq.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, x, iterArray,ls  ) )).get.dataset.head.getAs[Double](183) ) ) else  for (x <- Seq.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, x, iterArray, kvArrayDefault ))).get.dataset.head.getAs[Double](183) )
-          //map version vs flatMap
-          //val comprehensionArray = if (fraudCheck ==1) newValuesArray.map ( vs => keyValArray.map(ls => for (x <- Seq.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, x,vs,ls  ) )).get.dataset.head.getAs[Double](183) ) ) ) else newValuesArray.map(vs  => for (x <- Seq.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, x,vs, kvArrayDefault ))).get.dataset.head.getAs[Double](183) ) )
 
           //if we do two models this will need to be adapted in the future
 
-          //Ok(Json.toJson(ApiResponse( comprehensionArray.indexOf(comprehensionArray.max) ))
-
           comprehensionArray.map(ls =>
-            //Ok( Json.toJson(ls.getClass.getName) )
+            //ls.foreach(println)
             Ok( Json.toJson(ApiResponse( (ls).indexOf((ls).max) )) )
 
           )
@@ -1075,6 +1096,38 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
   }
 */
 
+  def dummyFunction()  : Unit = {
+    setKey("ddd", "101")
+  }
+
+  def healthz() = Action.async {
+    //insertKeyz()
+    //setKey("aaa", "400")
+    //dummyFunction()
+    /*
+    getVal("sessions").map(value =>
+    value match {
+      case Some(x) => {
+      dummyFunction()
+    }
+    case None => {
+      dummyFunction()
+    }
+    } )
+    */
+    getVal("sessions").map(  value =>
+      value match {
+        case Some(x)   => {
+          Ok( x )
+        }
+        case None => {
+          Ok( 2.toString )
+        }
+      }
+    )
+  }
+
+  /*
   def healthz() = Action.async {
     //insertKeyz()
 
@@ -1098,6 +1151,6 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
 
     )
   }
-
+  */
 
 }
