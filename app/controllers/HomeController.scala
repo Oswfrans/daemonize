@@ -99,7 +99,6 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
     }
   }
 
-
   def renameLater(initFrame: Row, sessID : String) : Array[String] = {
 
     val timeForm = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
@@ -158,17 +157,97 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
       {case Some(x) => x.toString
         case None => "" } )
 
-      //println(prevSess.getClass)
-      //println(prevSess)
-
       //instantiate newString
       var newString = ""
       var trueSetString = ""
       var set=0
-      //val timeForm = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
-      //combining side-effects with futures makes me slightly quesy!!!!!!!!!!!!!!!!!
+      //so await vs oncomplete
+      //in principal we could do oncomplete?
+      //lets test it
+
+      prevSess.onComplete({
+        case Success(value) => {
+          if (value == "") {
+            trueSetString = sessID + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString
+            //assert(trueSetString != "")
+            setKey("sessions", trueSetString + "|" + trueSetString)
+          }
+          else {
+            breakable {
+              for (x <- value.split("\\|")) {
+                println("here")
+                println(x)
+                println(x.split(",")(1))
+
+                val parseTime: String = x.split(",")(1)
+                println(parseTime)
+                println("here as well")
+                println(java.time.LocalDateTime.now.isAfter(java.time.LocalDateTime.parse(parseTime, timeForm).plusMinutes(10)))
+                if (java.time.LocalDateTime.now.isAfter(java.time.LocalDateTime.parse(parseTime, timeForm).plusMinutes(10))) { //timeForm.parse(x.split(",")(1)).plusMinutes(10)  ) {
+                  println("here1")
+                  //remove the session from string
+                  newString = if (newString == "") value.split("\\|").drop(1).mkString("\\|") else newString.split("\\|").drop(1).mkString("\\|")
+                }
+                else {
+                  println("here2")
+                  trueSetString = if (newString == "") value + "|" + sessID + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString else newString + "|" + sessID + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString
+                  set = 1
+                  setKey("sessions", trueSetString)
+                  break
+                }
+              }
+            }
+          }
+        }
+        case Failure(value) => {
+          //!! think doing nothing here is fine
+
+        }
+      })
+
+      /*
+      val awaited = Await.result(prevSess, 0.5.seconds)
+      if (awaited == "") {
+        trueSetString = sessID + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString
+        //assert(trueSetString != "")
+        setKey("sessions",  trueSetString + "|" + trueSetString)
+      }
+      else {
+        breakable {
+          for (x <- awaited.split("\\|") ) {
+            println("here")
+            println(x)
+            println(x.split(",")(1))
+            //Silent failure ???
+            val parseTime : String = x.split(",")(1)
+            println(parseTime)
+            println("here as well")
+            println(java.time.LocalDateTime.now.isAfter(java.time.LocalDateTime.parse(parseTime, timeForm).plusMinutes(10) ) )
+            if ( java.time.LocalDateTime.now.isAfter(java.time.LocalDateTime.parse(parseTime, timeForm).plusMinutes(10) ) ) {  //timeForm.parse(x.split(",")(1)).plusMinutes(10)  ) {
+              println("here1")
+              //remove the session from string
+              newString = if (newString == "") awaited.split("\\|").drop(1).mkString("\\|") else newString.split("\\|").drop(1).mkString("\\|")
+            }
+            else {
+              println("here2")
+              trueSetString = if (newString == "") awaited + "|" + sessID + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString else newString + "|" + sessID + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString
+              set=1
+              setKey("sessions", trueSetString)
+              break
+            }
+          }
+        }
+      }
+      */
+
+      return valuesArray
+
+      //combining side-effects with futures makes me slightly quesy
       //this logic loop can be refactored!
+      //outer if else, maybe not necessarry in prod, way flow control is done / breakable can we do it faster?
+
+      /*
       prevSess.map(ps =>
         if (ps == "") {
           trueSetString = sessID + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString
@@ -176,30 +255,25 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
           setKey("sessions",  trueSetString + "|" + trueSetString)
         }
         else {
-          println(ps)
           breakable {
             for (x <- ps.split("\\|") ) {
-              println("here3")
+              println("here")
+              println(x)
+              println(x.split(",")(1))
+              //Silent failure ???
               val parseTime : String = x.split(",")(1)
+              println(parseTime)
+              println("here as well")
+              println(java.time.LocalDateTime.now.isAfter(java.time.LocalDateTime.parse(parseTime, timeForm).plusMinutes(10) ) )
               if ( java.time.LocalDateTime.now.isAfter(java.time.LocalDateTime.parse(parseTime, timeForm).plusMinutes(10) ) ) {  //timeForm.parse(x.split(",")(1)).plusMinutes(10)  ) {
-              //if (java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now.plusMinutes(10)) > x.split(",")(1)) {
-              //if (java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now) > x.split(",")(1).plusMinutes(10)) {
+                println("here1")
                 //remove the session from string
                 newString = if (newString == "") ps.split("\\|").drop(1).mkString("\\|") else newString.split("\\|").drop(1).mkString("\\|")
-
-                //update the string in the KV store
-                //could be case of unnecessary updates!!!!!!!!!!!!!!!!!!!!!!!
-                //do not hink there is a side-effect problem. The problem lies in the fact these updates could be not needed + how eventual updates are resolved
-                //setKey("sessions", newString)
-                println("here1")
-
               }
               else {
                 println("here2")
-                //val trueSetString = if (newString=="") ps + "|" + sessID + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString else newString + "|" + sessID + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString
                 trueSetString = if (newString == "") ps + "|" + sessID + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString else newString + "|" + sessID + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString
                 set=1
-                //assert(trueSetString != "")
                 setKey("sessions", trueSetString)
                 break
               }
@@ -208,13 +282,13 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
         }
       )
       if (set==0) {
-        println("here4")
+        println("here33s")
         setKey("sessions", newString + "|" + sessID + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString )
       }
-
       //so newValuesArray is what you pass to the model(s) and newValueString is what you store in the KV store
-      //newValuesArray = valuesArray
       return valuesArray
+
+      */
       /*
       if (trueSetString != "") {
         return valuesArray
@@ -225,7 +299,6 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
         return valuesArray
       }
       */
-
 
     }
     else {
@@ -240,6 +313,88 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
       var newValuesArray = Array("")
       var newValueString = ""
 
+      //oncomplete do not think that works for this one, because we need to pass the array to the model
+      //so let us try await !!!!!!!! to discuss the amount of time to wait
+      //current setup is kinda like await hmm
+
+      //see below await setup, to discuss with Joao if we should do await or the thread sleep if needed
+      /*
+      val awaited = Await.result(prevSess, 0.5.seconds)
+      breakable { for (x <- awaited.split("\\|")) {
+        val parseTime : String = x.split(",")(1)
+        if ( java.time.LocalDateTime.now.isAfter(java.time.LocalDateTime.parse(parseTime, timeForm).plusMinutes(10) ) ) {
+          //remove the session from string
+          newString = if (newString=="") awaited.split("\\|").drop(1).mkString("\\|") else newString.split("\\|").drop(1).mkString("\\|")
+
+        }
+        else if ( ( sessID == x.split(",")(0) ) ) {
+          //get values
+          var valuesArray = x.split(",").drop(2) //what type is this? // I think array
+          //remove the session from string
+          newString = if (newString=="") awaited.split("\\|").drop(1).mkString("\\|") else newString.split("\\|").drop(1).mkString("\\|")
+
+          //so we get the values from the previous session that we will pass to create one or two frames
+          //now we need to append a new string to value of session
+          //that contains the data of what we need plus the id and the timestamp
+
+          val firstArray : Array[String] = valuesArray.slice(0,13)
+
+          val thereArray = Array(initFrame.getString(79), //avsthere
+            if (initFrame.getString(13)=="NULl" || initFrame.getString(13)=="" ) "0" else "1", //cv2there
+            if (initFrame.getString(52)=="NULL" || initFrame.getString(52)=="" ) "0" else "1", //expthere
+            if (initFrame.getString(51)=="NULL" || initFrame.getString(51)=="" ) "0" else "1" //threedthere)
+          )
+
+          //current values become previous
+          var previousArrayNew = Array(initFrame.getString(11), //respcodeprevious
+            initFrame.getString(13), //cv2resultprevious
+            initFrame.getString(26), //issuerprevious
+            initFrame.getString(51), //threedprevious
+            initFrame.getString(15), //channelprevious
+            initFrame.getString(16), //channelsubtypeprevious
+            initFrame.getString(62), //transactiontypeidprevious
+            initFrame.getString(14), //authorizationtypeidprevious
+            initFrame.getString(22), //processoridprevious
+            initFrame.getString(23) //categorycodegroupprevious
+          )
+
+          //compare the old with the new
+          //so it is the previous value vs current value taken from the initFrame
+          val changeArray = Array( if (valuesArray(26) == initFrame.getString(82) ) "0" else "1",  //threedtherechange
+            if (valuesArray(1) == initFrame.getString(13) ) "0" else "1",  //cv2change
+            ( (System.currentTimeMillis / 1000 ) -  java.time.LocalDateTime.parse(x.split(",")(1), java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")).atZone(ZoneId.systemDefault()).toEpochSecond() ).toString() ,  //authdatesecondsdiff
+            if (valuesArray(2) == initFrame.getString(26) ) "0" else "1",  //issuerchange
+            if (valuesArray(3) == initFrame.getString(51) ) "0" else "1",  //threedchange
+            if (valuesArray(9) == initFrame.getString(23) ) "0" else "1",  //categorycodegroupchange
+            if (valuesArray(23) == initFrame.getString(79) ) "0" else "1",  //avstherechange
+            if (valuesArray(7) == initFrame.getString(14) ) "0" else "1",  //authorizationtypeidchange
+            if (valuesArray(8) == initFrame.getString(22) ) "0" else "1",  //processoridchange
+            if (valuesArray(4) == initFrame.getString(16) ) "0" else "1",  //channelsubtypechange
+            if (valuesArray(5) == initFrame.getString(15) ) "0" else "1"  //channelchange
+          )
+
+          //correctly define what we pass to the model, seems okay?
+          newValuesArray = previousArrayNew ++ firstArray ++ thereArray ++ changeArray
+          var setString = (previousArrayNew ++ firstArray ++ thereArray ++ changeArray).mkString(",")
+
+          //now Timestamp
+          val now = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now)
+
+          //create the new value to set
+          newValueString = newString + "|" + sessID + "," + now.toString + "," + setString
+
+          setKey("sessions",  newValueString)
+
+          break
+        }
+        else {
+          //ERROR
+          //should not be accessed not sure what to do?
+        }
+      }
+      }
+      */
+
       //we need to break if we find a match that is not too late
       //bit ugly, but alternatives are meh https://stackoverflow.com/questions/2742719/how-do-i-break-out-of-a-loop-in-scala
 
@@ -249,30 +404,20 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
         breakable { for (x <- ps.split("\\|")) {
           val parseTime : String = x.split(",")(1)
           if ( java.time.LocalDateTime.now.isAfter(java.time.LocalDateTime.parse(parseTime, timeForm).plusMinutes(10) ) ) {
-            //if (java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now.plusMinutes(10)) > java.time.LocalDateTime.parse(x.split(",")(1), java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss") ) ) {
-            //if (java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now.plusMinutes(10)) > x.split(",")(1) ) {
             //remove the session from string
             newString = if (newString=="") ps.split("\\|").drop(1).mkString("\\|") else newString.split("\\|").drop(1).mkString("\\|")
 
-            //update the string in the KV store
-            //could be case of unnecessary updates!!!!!!!!!!!!!!!!!!!!!!!
-            //do not hink there is a side-effect problem. The problem lies in the fact these updates could be not needed + how eventual updates are resolved
-            //setKey("session", newString)
           }
           else if ( ( sessID == x.split(",")(0) ) ) {
-          //else if ( (OriginalTransaction.toRowID(input)).get(1).asInstanceOf[String] == x.split(",")(0) ) {
             //get values
             var valuesArray = x.split(",").drop(2) //what type is this? // I think array
             //remove the session from string
             newString = if (newString=="") ps.split("\\|").drop(1).mkString("\\|") else newString.split("\\|").drop(1).mkString("\\|")
-            //ps.split("\\|").drop(1).mkString("\\|")
 
             //so we get the values from the previous session that we will pass to create one or two frames
             //now we need to append a new string to value of session
             //that contains the data of what we need plus the id and the timestamp
 
-            //so we need to create firstAndThereArray , previousArray and changeArray
-            //first stay the same, for the there we need to check
             val firstArray : Array[String] = valuesArray.slice(0,13)
 
             val thereArray = Array(initFrame.getString(79), //avsthere
@@ -296,7 +441,6 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
 
             //compare the old with the new
             //so it is the previous value vs current value taken from the initFrame
-            // x.split(",")(1)  - System.currentTimeMillis / 1000
             val changeArray = Array( if (valuesArray(26) == initFrame.getString(82) ) "0" else "1",  //threedtherechange
               if (valuesArray(1) == initFrame.getString(13) ) "0" else "1",  //cv2change
               ( (System.currentTimeMillis / 1000 ) -  java.time.LocalDateTime.parse(x.split(",")(1), java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")).atZone(ZoneId.systemDefault()).toEpochSecond() ).toString() ,  //authdatesecondsdiff
@@ -320,15 +464,13 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
             //create the new value to set
             newValueString = newString + "|" + sessID + "," + now.toString + "," + setString
 
-            //val newValueString = newString + "|" + sessID + "," + now.toString + "," + setString
-            //assert(newValueString != "")
             setKey("sessions",  newValueString)
 
             break
           }
           else {
             //ERROR
-            //not sure what to do?
+            //should not be accessed not sure what to do?
           }
         }
         }
@@ -358,7 +500,6 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
         //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         //because of a succesful parse of the api call, we gather data from our KV store
-        //for now testcase, later we will need to adapt the leapframe to include the actual kv data
 
         //generate different candidate transactions here
         //we generate the default transaction if the currentrank is not too high
@@ -368,267 +509,24 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
         //respcodeprevious cv2resultprevious issuerprevious  threedprevious  channelprevious channelsubtypeprevious  transactiontypeidprevious authorizationtypeidprevious processoridprevious categorycodegroupprevious channelsubtypefirst processoridfirst  avstherefirst threedtherefirst  respcodefirst firstdate issuerfirst threedfirst channelfirst  transactiontypeidfirst  authorizationtypeidfirst  categorycodegroupfirst  cv2resultfirst  avsthere  cv2there  expthere  threedthere threedtherechange cv2change authdatesecondsdiff issuerchange  threedchange  categorycodegroupchange avstherechange  authorizationtypeidchange processoridchange channelsubtypechange  channelchange
 
         val fraudCheck = 0
-        //Check if rank is low enough
-        //check if we do fraud check
-        //if fraudCheck we do key stuff for that
-        //we then check if we are rank1 or higher
-        //if higher
-        //if lower
-        //if fraudCheck we pass to both models and use KV
-        //if not we use default model (now with sessionvalues)
 
         //38 values
         //because implicit vals are hard
         val sessionValuesDefault = Array("1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1")
         val kvArrayDefault = Array("1", "1", "1", "1")
 
-        //hmm, will need to adept method to take the values from the input
-        //probably pass some implicit value
         //need to create intermediate df object to not recompute everything
         val initFrame = OriginalTransaction.toRow(input, 0, sessionValuesDefault, kvArrayDefault)
 
         if ( initFrame.getDouble(55) < 3.0 ) {
 
-          /*
-          if (fraudCheck==1) {
-            val testKey = "10001"
-            val keyArray = for (a <- Array("a","b","c", "d")) yield testKey+a
-
-            keyValArray = for {
-              result1 <- getVal( testKey + "a").map( value => value match { case Some(x) => x.toString case None => 0.toString } )
-              result2 <- getVal( testKey + "b").map( value => value match { case Some(x) => x.toString case None => 0.toString } )
-              result3 <- getVal( testKey + "c").map( value => value match { case Some(x) => x.toString case None => 0.toString } )
-              result4 <- getVal( testKey + "d").map( value => value match { case Some(x) => x.toString case None => 0.toString } )
-            } yield Array(result1, result2, result3, result4)
-
-            // we set new values for the key
-            // needs to be changed to be something derived from input!!!!
-            for (x <- keyArray) {
-              setKey(x, "7")
-            }
-          }
-
-
-          if ( initFrame.getDouble(55) == 1.0 ) {
-
-            //all the first values for the session
-            //there check needs to be double checked
-            val firstArray =  Array(  initFrame.getString(16), //channelsubtypefirst
-              initFrame.getString(22), //processoridfirst
-              initFrame.getString(79), //avstherefirst
-              if (initFrame.getString(51)=="NULL" || initFrame.getString(51)=="" ) "0" else "1", //threedtherefirst
-              initFrame.getString(11), //respcodefirst
-              initFrame.getString(3), //firstdate
-              initFrame.getString(26), //issuerfirst
-              initFrame.getString(51), //threedfirst
-              initFrame.getString(15), //channelfirst
-              initFrame.getString(62), //transactiontypeidfirst
-              initFrame.getString(14), //authorizationtypeidfirst
-              initFrame.getString(23), //categorycodegroupfirst
-              initFrame.getString(13) //cv2resultfirst
-            )
-
-            val thereArray = Array(initFrame.getString(79), //avsthere
-              if (initFrame.getString(13)=="NULl" || initFrame.getString(13)=="" ) "0" else "1", //cv2there
-              if (initFrame.getString(52)=="NULL" || initFrame.getString(52)=="" ) "0" else "1", //expthere
-              if (initFrame.getString(51)=="NULL" || initFrame.getString(51)=="" ) "0" else "1" //threedthere
-            )
-
-            //all the previous values for the session, so the current session
-            //these two will be either discarded or kept blank
-            var previousArray = Array()
-            //defaultvalues for initial
-            //threedtherechange cv2change authdatesecondsdiff issuerchange  threedchange  categorycodegroupchange avstherechange  authorizationtypeidchange processoridchange channelsubtypechange  channelchange
-            var changeArray = Array("0","0","0","0","0","0","0","0","0","0","0")
-
-            //this is what we save and pass for follow up sessions
-
-            //should the first entry be detailedcode? corresponding to respcode?????
-            var previousArrayNew = Array(initFrame.getString(11), //respcodeprevious
-              initFrame.getString(13), //cv2resultprevious
-              initFrame.getString(26), //issuerprevious
-              initFrame.getString(51), //threedprevious
-              initFrame.getString(15), //channelprevious
-              initFrame.getString(16), //channelsubtypeprevious
-              initFrame.getString(62), //transactiontypeidprevious
-              initFrame.getString(14), //authorizationtypeidprevious
-              initFrame.getString(22), //processoridprevious
-              initFrame.getString(23) //categorycodegroupprevious
-            )
-
-            //update KV store
-            //change arrays to strings to save
-            val valuesArray : Array[String] = previousArrayNew ++ firstArray ++ thereArray ++ changeArray
-            var setString : String = (previousArrayNew ++ firstArray ++ thereArray ++ changeArray).mkString(",")
-
-            //need to still deal with a future, because we need to update the current sessions value with the append
-            //or do we even do this in this case???????????????????????????????????
-            //I do not know , I think we do to ensure the shortness of the KV, because that is a concern
-            //and the date pop still
-
-            //get previous sessionString
-            val prevSess = getVal("sessions").map(value => value match
-            {case Some(x) => x.toString
-              case None => "" } )
-
-            //instantiate newString
-            var newString = ""
-
-            //change this !!!!!!!!!!!!!!!!!!!!!!!!
-            //I think we need a case if it is empty or maybe do that before
-            //combining side-effects with futures makes me slightly quesy!!!!!!!!!!!!!!!!!
-            //!!!!!!!!!!!!!! Stackoverflow search needed!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            prevSess.map(ps =>
-              breakable {
-                for (x <- ps.split("\\|")) {
-                  if (java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now.plusMinutes(10)) > x.split(",")(1)) {
-                    //remove the session from string
-                    newString = ps.split("\\|").drop(1).mkString("\\|")
-
-                    //update the string in the KV store
-                    //Do we need to do the update here??????????
-                    //could be case of unnecessary updates!!!!!!!!!!!!!!!!!!!!!!!
-                    //SO side effects and futures
-                    setKey("session", newString)
-                  }
-                  else {
-                    break
-                  }
-                }
-              }
-              // value setKey is not a member of Unit
-              //[error] possible cause: maybe a semicolon is missing before `value setKey'?
-                //setKey("session",  ( ps + "|" + OriginalTransaction.toRowID(input).getString(1) + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString ) )
-            )
-
-            //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            //potential problem with having two future resulotions instead of one, is that one setKey overwrites the other
-
-            prevSess.map(ps =>
-            //val newValueString = ps + "|" + OriginalTransaction.toRowID(input).getString(1) + "," + DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now).toString + "," + setString
-            setKey("session",  ps + "|" + OriginalTransaction.toRowID(input).getString(1) + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString )
-            )
-
-            //so newValuesArray is what you pass to the model(s) and newValueString is what you store in the KV store
-            newValuesArray = valuesArray
-          }
-          else {
-            //get values from KV store
-            //get previous sessionString
-            val prevSess = getVal("sessions").map(value => value match
-            {case Some(x) => x.toString
-              case None => "" } )
-
-            //instantiate newString
-            var newString = ""
-
-            //define new values to save here??
-            //or in future map?
-
-            //!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            //can we do a side effect as a consequence of a future???
-            //this seems very supsect!!!!!!
-
-            //we need to break if we find a match that is not too late
-            //bit ugly, but alternatives are meh https://stackoverflow.com/questions/2742719/how-do-i-break-out-of-a-loop-in-scala
-
-            //parse string and check if we should pop stuff off
-            prevSess.map(ps =>
-              breakable { for (x <- ps.split("\\|")) {
-              if (java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now.plusMinutes(10)) > x.split(",")(1) ) {
-                //remove the session from string
-                newString = ps.split("\\|").drop(1).mkString("\\|")
-                //update the string in the KV store
-                setKey("session",  newString)
-              }
-              else if ( (OriginalTransaction.toRowID(input)).get(1).asInstanceOf[String] == x.split(",")(0) ) {
-                //get values
-                var valuesArray = x.split(",").drop(2) //what type is this? // I think array
-                //remove the session from string
-                newString = ps.split("\\|").drop(1).mkString("\\|")
-
-                //so we get the values from the previous session that we will pass to create one or two frames
-                //now we need to append a new string to value of session
-                //that contains the data of what we need plus the id and the timestamp
-
-                //so we need to create firstAndThereArray , previousArray and changeArray
-                //first stay the same, for the there we need to check
-                val firstArray : Array[String] = valuesArray.slice(0,13)
-
-                val thereArray = Array(initFrame.getString(79), //avsthere
-                  if (initFrame.getString(13)=="NULl" || initFrame.getString(13)=="" ) "0" else "1", //cv2there
-                  if (initFrame.getString(52)=="NULL" || initFrame.getString(52)=="" ) "0" else "1", //expthere
-                  if (initFrame.getString(51)=="NULL" || initFrame.getString(51)=="" ) "0" else "1" //threedthere)
-                )
-
-                //current values become previous
-                var previousArrayNew = Array(initFrame.getString(11), //respcodeprevious
-                  initFrame.getString(13), //cv2resultprevious
-                  initFrame.getString(26), //issuerprevious
-                  initFrame.getString(51), //threedprevious
-                  initFrame.getString(15), //channelprevious
-                  initFrame.getString(16), //channelsubtypeprevious
-                  initFrame.getString(62), //transactiontypeidprevious
-                  initFrame.getString(14), //authorizationtypeidprevious
-                  initFrame.getString(22), //processoridprevious
-                  initFrame.getString(23) //categorycodegroupprevious
-                )
-
-                //compare the old with the new
-                //so it is the previous value vs current value taken from the initFrame
-                // x.split(",")(1)  - System.currentTimeMillis / 1000
-                val changeArray = Array( if (valuesArray(26) == initFrame.getString(82) ) "0" else "1",  //threedtherechange
-                  if (valuesArray(1) == initFrame.getString(13) ) "0" else "1",  //cv2change
-                  ( (System.currentTimeMillis / 1000 ) -  java.time.LocalDateTime.parse(x.split(",")(1), java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")).atZone(ZoneId.systemDefault()).toEpochSecond() ).toString() ,  //authdatesecondsdiff
-                if (valuesArray(2) == initFrame.getString(26) ) "0" else "1",  //issuerchange
-                if (valuesArray(3) == initFrame.getString(51) ) "0" else "1",  //threedchange
-                if (valuesArray(9) == initFrame.getString(23) ) "0" else "1",  //categorycodegroupchange
-                if (valuesArray(23) == initFrame.getString(79) ) "0" else "1",  //avstherechange
-                if (valuesArray(7) == initFrame.getString(14) ) "0" else "1",  //authorizationtypeidchange
-                if (valuesArray(8) == initFrame.getString(22) ) "0" else "1",  //processoridchange
-                if (valuesArray(4) == initFrame.getString(16) ) "0" else "1",  //channelsubtypechange
-                if (valuesArray(5) == initFrame.getString(15) ) "0" else "1"  //channelchange
-                )
-
-                //correctly define what we pass to the model, seems okay?
-                newValuesArray = previousArrayNew ++ firstArray ++ thereArray ++ changeArray
-                var setString = (previousArrayNew ++ firstArray ++ thereArray ++ changeArray).mkString(",")
-
-                //now Timestamp
-                val now = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now)
-                //sessionid
-                val sessionID = OriginalTransaction.toRowID(input).getString(1)
-
-                //put these new values in front of the newString
-
-                //create the new value to set
-                val newValueString = ps + "|" + sessionID + "," + now.toString + "," + setString
-                setKey("session",  newValueString)
-
-                break
-              }
-              else {
-                //ERROR
-                //not sure what to do?
-              }
-            }
-              }
-            )
-
-          }
-          */
-
           // 0 normal txn
           // 1 channel moto (channel 2, channelchange 1 and threed 0 and threedchange 1 )
           // 2 remove threed (threed 0 and threedchange 1)
 
-
-          //val comprehensionArray = if (fraudCheck ==1) newValuesArray.flatMap ( vs => keyValArray.map(ls => for (x <- Seq.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, x,vs,ls  ) )).get.dataset.head.getAs[Double](183) ) ) else newValuesArray.map(vs  => for (x <- Seq.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, x,vs, kvArrayDefault ))).get.dataset.head.getAs[Double](183) )
           //function version
           val kvArray = kvFunction(fraudCheck)
           val iterArray = renameLater(initFrame, sessionID)
-
-          //iterArray.foreach(println)
 
           val comprehensionArray : scala.concurrent.Future[List[Double]] = if (fraudCheck ==1) kvArray.map(ls => for (x <- List.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, x, iterArray,ls  ) ) ) ).get.dataset.head.getAs[Double](183) ) else scala.concurrent.Future( for (x <- List.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, x, iterArray, kvArrayDefault ) ) ) ).get.dataset.head.getAs[Double](183) )
 
@@ -637,7 +535,6 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
           comprehensionArray.map(ls =>
             //ls.foreach(println)
             Ok( Json.toJson(ApiResponse( (ls).indexOf((ls).max) )) )
-
           )
 
         }
@@ -647,454 +544,9 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
         }
 
       case e : JsError => Future( e ).map(ft => BadRequest("Errors: " + JsError.toJson( ft ) ) )
-
     }
   }
 
-
-
-  /*
-  def index(): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request: Request[JsValue] =>
-    request.body.validate[OriginalTransaction] match {
-      case success: JsSuccess[OriginalTransaction] =>
-        val input = success.value
-
-        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        //VERYFY with Jorge that respcode is detailedcode !!!!!!!!!!!!!!!!!!!!!
-        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-        //because of a succesful parse of the api call, we gather data from our KV store
-        //for now testcase, later we will need to adapt the leapframe to include the actual kv data
-
-        //generate different candidate transactions here
-        //we generate the default transaction if the currentrank is not too high
-        //current implentation assumes a certain schema, if this changes we need to change the code
-
-        //the sessionvalues are assumed to be in the following order:
-        //respcodeprevious cv2resultprevious issuerprevious  threedprevious  channelprevious channelsubtypeprevious  transactiontypeidprevious authorizationtypeidprevious processoridprevious categorycodegroupprevious channelsubtypefirst processoridfirst  avstherefirst threedtherefirst  respcodefirst firstdate issuerfirst threedfirst channelfirst  transactiontypeidfirst  authorizationtypeidfirst  categorycodegroupfirst  cv2resultfirst  avsthere  cv2there  expthere  threedthere threedtherechange cv2change authdatesecondsdiff issuerchange  threedchange  categorycodegroupchange avstherechange  authorizationtypeidchange processoridchange channelsubtypechange  channelchange
-
-        val fraudCheck = 0
-        //Check if rank is low enough
-        //check if we do fraud check
-        //if fraudCheck we do key stuff for that
-        //we then check if we are rank1 or higher
-        //if higher
-        //if lower
-        //if fraudCheck we pass to both models and use KV
-        //if not we use default model (now with sessionvalues)
-
-        //38 values
-        //because implicit vals are hard
-        val sessionValuesDefault = Array("1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1")
-        val kvArrayDefault = Array("1", "1", "1", "1")
-
-        //hmm, will need to adept method to take the values from the input
-        //probably pass some implicit value
-        //need to create intermediate df object to not recompute everything
-        val initFrame = OriginalTransaction.toRow(input, 0, sessionValuesDefault, kvArrayDefault)
-
-        if ( initFrame.getDouble(55) < 3.0 ) {
-
-          //we need to get the values for the keys
-          //needs to be changed to something extracted from input!!
-
-          var keyValArray = Future( Array("") ) //Array("")
-          var newValuesArray = Array("") //Future( Array("") ) //Array("")
-
-          if (fraudCheck==1) {
-            val testKey = "10001"
-            val keyArray = for (a <- Array("a","b","c", "d")) yield testKey+a
-
-            keyValArray = for {
-              result1 <- getVal( testKey + "a").map( value => value match { case Some(x) => x.toString case None => 0.toString } )
-              result2 <- getVal( testKey + "b").map( value => value match { case Some(x) => x.toString case None => 0.toString } )
-              result3 <- getVal( testKey + "c").map( value => value match { case Some(x) => x.toString case None => 0.toString } )
-              result4 <- getVal( testKey + "d").map( value => value match { case Some(x) => x.toString case None => 0.toString } )
-            } yield Array(result1, result2, result3, result4)
-
-            // we set new values for the key
-            // needs to be changed to be something derived from input!!!!
-            for (x <- keyArray) {
-              setKey(x, "7")
-            }
-          }
-
-
-          if ( initFrame.getDouble(55) == 1.0 ) {
-
-            //all the first values for the session
-            //there check needs to be double checked
-            val firstArray =  Array(  initFrame.getString(16), //channelsubtypefirst
-              initFrame.getString(22), //processoridfirst
-              initFrame.getString(79), //avstherefirst
-              if (initFrame.getString(51)=="NULL" || initFrame.getString(51)=="" ) "0" else "1", //threedtherefirst
-              initFrame.getString(11), //respcodefirst
-              initFrame.getString(3), //firstdate
-              initFrame.getString(26), //issuerfirst
-              initFrame.getString(51), //threedfirst
-              initFrame.getString(15), //channelfirst
-              initFrame.getString(62), //transactiontypeidfirst
-              initFrame.getString(14), //authorizationtypeidfirst
-              initFrame.getString(23), //categorycodegroupfirst
-              initFrame.getString(13) //cv2resultfirst
-            )
-
-            val thereArray = Array(initFrame.getString(79), //avsthere
-              if (initFrame.getString(13)=="NULl" || initFrame.getString(13)=="" ) "0" else "1", //cv2there
-              if (initFrame.getString(52)=="NULL" || initFrame.getString(52)=="" ) "0" else "1", //expthere
-              if (initFrame.getString(51)=="NULL" || initFrame.getString(51)=="" ) "0" else "1" //threedthere
-            )
-
-            //all the previous values for the session, so the current session
-            //these two will be either discarded or kept blank
-            var previousArray = Array()
-            //defaultvalues for initial
-            //threedtherechange cv2change authdatesecondsdiff issuerchange  threedchange  categorycodegroupchange avstherechange  authorizationtypeidchange processoridchange channelsubtypechange  channelchange
-            var changeArray = Array("0","0","0","0","0","0","0","0","0","0","0")
-
-            //this is what we save and pass for follow up sessions
-
-            //should the first entry be detailedcode? corresponding to respcode?????
-            var previousArrayNew = Array(initFrame.getString(11), //respcodeprevious
-              initFrame.getString(13), //cv2resultprevious
-              initFrame.getString(26), //issuerprevious
-              initFrame.getString(51), //threedprevious
-              initFrame.getString(15), //channelprevious
-              initFrame.getString(16), //channelsubtypeprevious
-              initFrame.getString(62), //transactiontypeidprevious
-              initFrame.getString(14), //authorizationtypeidprevious
-              initFrame.getString(22), //processoridprevious
-              initFrame.getString(23) //categorycodegroupprevious
-            )
-
-            //update KV store
-            //change arrays to strings to save
-            val valuesArray : Array[String] = previousArrayNew ++ firstArray ++ thereArray ++ changeArray
-            var setString : String = (previousArrayNew ++ firstArray ++ thereArray ++ changeArray).mkString(",")
-
-            //need to still deal with a future, because we need to update the current sessions value with the append
-            //or do we even do this in this case???????????????????????????????????
-            //I do not know , I think we do to ensure the shortness of the KV, because that is a concern
-            //and the date pop still
-
-            //get previous sessionString
-            val prevSess = getVal("sessions").map(value => value match
-            {case Some(x) => x.toString
-              case None => "" } )
-
-            //instantiate newString
-            var newString = ""
-
-            //change this !!!!!!!!!!!!!!!!!!!!!!!!
-            //I think we need a case if it is empty or maybe do that before
-            //combining side-effects with futures makes me slightly quesy!!!!!!!!!!!!!!!!!
-            //!!!!!!!!!!!!!! Stackoverflow search needed!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            prevSess.map(ps =>
-              breakable {
-                for (x <- ps.split("\\|")) {
-                  if (java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now.plusMinutes(10)) > x.split(",")(1)) {
-                    //remove the session from string
-                    newString = ps.split("\\|").drop(1).mkString("\\|")
-
-                    //update the string in the KV store
-                    //Do we need to do the update here??????????
-                    //could be case of unnecessary updates!!!!!!!!!!!!!!!!!!!!!!!
-                    //SO side effects and futures
-                    setKey("session", newString)
-                  }
-                  else {
-                    break
-                  }
-                }
-              }
-              // value setKey is not a member of Unit
-              //[error] possible cause: maybe a semicolon is missing before `value setKey'?
-                //setKey("session",  ( ps + "|" + OriginalTransaction.toRowID(input).getString(1) + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString ) )
-            )
-
-            //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            //potential problem with having two future resulotions instead of one, is that one setKey overwrites the other
-
-            //now Timestamp
-            //val now = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now)
-            //sessionid
-            //val sessionID = OriginalTransaction.toRowID(input).getString(1)
-
-            prevSess.map(ps =>
-            //val newValueString = ps + "|" + OriginalTransaction.toRowID(input).getString(1) + "," + DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now).toString + "," + setString
-            setKey("session",  ps + "|" + OriginalTransaction.toRowID(input).getString(1) + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString )
-            )
-
-            //so newValuesArray is what you pass to the model(s) and newValueString is what you store in the KV store
-            newValuesArray = valuesArray
-          }
-          else {
-            //get values from KV store
-            //get previous sessionString
-            val prevSess = getVal("sessions").map(value => value match
-            {case Some(x) => x.toString
-              case None => "" } )
-
-            //instantiate newString
-            var newString = ""
-
-            //define new values to save here??
-            //or in future map?
-
-            //!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            //can we do a side effect as a consequence of a future???
-            //this seems very supsect!!!!!!
-
-            //we need to break if we find a match that is not too late
-            //bit ugly, but alternatives are meh https://stackoverflow.com/questions/2742719/how-do-i-break-out-of-a-loop-in-scala
-
-            //parse string and check if we should pop stuff off
-            prevSess.map(ps =>
-              breakable { for (x <- ps.split("\\|")) {
-              if (java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now.plusMinutes(10)) > x.split(",")(1) ) {
-                //remove the session from string
-                newString = ps.split("\\|").drop(1).mkString("\\|")
-                //update the string in the KV store
-                setKey("session",  newString)
-              }
-              else if ( (OriginalTransaction.toRowID(input)).get(1).asInstanceOf[String] == x.split(",")(0) ) {
-                //get values
-                var valuesArray = x.split(",").drop(2) //what type is this? // I think array
-                //remove the session from string
-                newString = ps.split("\\|").drop(1).mkString("\\|")
-
-                //so we get the values from the previous session that we will pass to create one or two frames
-                //now we need to append a new string to value of session
-                //that contains the data of what we need plus the id and the timestamp
-
-                //so we need to create firstAndThereArray , previousArray and changeArray
-                //first stay the same, for the there we need to check
-                val firstArray : Array[String] = valuesArray.slice(0,13)
-
-                val thereArray = Array(initFrame.getString(79), //avsthere
-                  if (initFrame.getString(13)=="NULl" || initFrame.getString(13)=="" ) "0" else "1", //cv2there
-                  if (initFrame.getString(52)=="NULL" || initFrame.getString(52)=="" ) "0" else "1", //expthere
-                  if (initFrame.getString(51)=="NULL" || initFrame.getString(51)=="" ) "0" else "1" //threedthere)
-                )
-
-                //current values become previous
-                var previousArrayNew = Array(initFrame.getString(11), //respcodeprevious
-                  initFrame.getString(13), //cv2resultprevious
-                  initFrame.getString(26), //issuerprevious
-                  initFrame.getString(51), //threedprevious
-                  initFrame.getString(15), //channelprevious
-                  initFrame.getString(16), //channelsubtypeprevious
-                  initFrame.getString(62), //transactiontypeidprevious
-                  initFrame.getString(14), //authorizationtypeidprevious
-                  initFrame.getString(22), //processoridprevious
-                  initFrame.getString(23) //categorycodegroupprevious
-                )
-
-                //compare the old with the new
-                //so it is the previous value vs current value taken from the initFrame
-                // x.split(",")(1)  - System.currentTimeMillis / 1000
-                val changeArray = Array( if (valuesArray(26) == initFrame.getString(82) ) "0" else "1",  //threedtherechange
-                  if (valuesArray(1) == initFrame.getString(13) ) "0" else "1",  //cv2change
-                  ( (System.currentTimeMillis / 1000 ) -  java.time.LocalDateTime.parse(x.split(",")(1), java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")).atZone(ZoneId.systemDefault()).toEpochSecond() ).toString() ,  //authdatesecondsdiff
-                if (valuesArray(2) == initFrame.getString(26) ) "0" else "1",  //issuerchange
-                if (valuesArray(3) == initFrame.getString(51) ) "0" else "1",  //threedchange
-                if (valuesArray(9) == initFrame.getString(23) ) "0" else "1",  //categorycodegroupchange
-                if (valuesArray(23) == initFrame.getString(79) ) "0" else "1",  //avstherechange
-                if (valuesArray(7) == initFrame.getString(14) ) "0" else "1",  //authorizationtypeidchange
-                if (valuesArray(8) == initFrame.getString(22) ) "0" else "1",  //processoridchange
-                if (valuesArray(4) == initFrame.getString(16) ) "0" else "1",  //channelsubtypechange
-                if (valuesArray(5) == initFrame.getString(15) ) "0" else "1"  //channelchange
-                )
-
-                //correctly define what we pass to the model, seems okay?
-                newValuesArray = previousArrayNew ++ firstArray ++ thereArray ++ changeArray
-                var setString = (previousArrayNew ++ firstArray ++ thereArray ++ changeArray).mkString(",")
-
-                //now Timestamp
-                val now = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now)
-                //sessionid
-                val sessionID = OriginalTransaction.toRowID(input).getString(1)
-
-                //put these new values in front of the newString
-
-                //create the new value to set
-                val newValueString = ps + "|" + sessionID + "," + now.toString + "," + setString
-                setKey("session",  newValueString)
-
-                break
-              }
-              else {
-                //ERROR
-                //not sure what to do?
-              }
-            }
-              }
-            )
-            //update KV store
-            //???
-            //setkey("session",  newString)
-
-          }
-
-          // 0 normal txn
-          // 1 channel moto (channel 2, channelchange 1 and threed 0 and threedchange 1 )
-          // 2 remove threed (threed 0 and threedchange 1)
-
-          //so this a oneliner that does all the stuff we do below, but is much less readable. I feel conflicted
-          //we check which method we should use the fraud one or the normal one
-
-          //need to pass valuesArray , is double future ?
-          //how do we handle this?
-          /*
-          if (fraudCheck==1 ) {
-            //this takes both the sessionvalues and the riskvalues
-            //maybe need to adept to take in to account that we would use a different model for fraud?
-            //so maybe we return something like a tuple of which we then check both values in the ApiResponse class?
-            val comprehensionArray = newValuesArray.flatMap ( vs => keyValArray.map(ls => for (x <- Seq.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, x, vs,ls )))).get.dataset.head.getAs[Double](183) ) )
-
-          }
-          else {
-            val comprehensionArray = newValuesArray.map(vs  => for (x <- Seq.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, x, vs)))).get.dataset.head.getAs[Double](183) )
-
-          }
-          */
-          //val comprehensionArray = if (fraudCheck ==1) newValuesArray.flatMap ( vs => keyValArray.map(ls => for (x <- Seq.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, x,vs,ls  ) )).get.dataset.head.getAs[Double](183) ) ) else newValuesArray.map(vs  => for (x <- Seq.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, x,vs, kvArrayDefault ))).get.dataset.head.getAs[Double](183) )
-
-          //map version vs flatMap
-          val comprehensionArray = if (fraudCheck ==1) newValuesArray.map ( vs => keyValArray.map(ls => for (x <- Seq.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, x,vs,ls  ) )).get.dataset.head.getAs[Double](183) ) ) ) else newValuesArray.map(vs  => for (x <- Seq.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, x,vs, kvArrayDefault ))).get.dataset.head.getAs[Double](183) ) )
-
-            //if we do two models this will need to be adapted in the future
-          comprehensionArray.map(ls =>
-            Ok( Json.toJson(ApiResponse(ls.indexOf(ls.max) )) )
-          )
-
-        }
-        else {
-          val changes = 0
-          Future ( Json.toJson(ApiResponse(changes)) ).map(ft => Ok(ft))
-        }
-
-      case e : JsError => Future( e ).map(ft => BadRequest("Errors: " + JsError.toJson( ft ) ) )
-
-    }
-  }
-*/
-
-  /*
-  def index(): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request: Request[JsValue] =>
-    request.body.validate[OriginalTransaction] match {
-      case success: JsSuccess[OriginalTransaction] =>
-        val input = success.value
-
-        //because of a succesful parse of the api call, we gather data from our KV store
-        //for now testcase, later we will need to adapt the leapframe to include the actual kv data
-
-        //generate different candidate transactions here
-        //we generate the default transaction if the currentrank is not too high
-        //current implentation assumes a certain schema, if this changes we need to change the code
-
-        if ( OriginalTransaction.toRow(input, 0).getDouble(55) < 3.0 ) {
-
-          //we need to get the values for the keys
-          //needs to be changed to something extracted from input!!
-
-          val testKey = "10001"
-          val keyArray = for (a <- Array("a","b","c", "d")) yield testKey+a
-
-          //not sure that this value deals properly with the Option?!!!!!!!!!!!!!
-          //need to change getVal?????? and toRowKV ?????????????????????????????
-          //val keyValArray = for (x <- keyArray) yield getValResolve( getVal( x) )
-
-          var keyValArray = for {
-            result1 <- getVal( testKey + "a").map( value => value match { case Some(x) => x.toString case None => 0.toString } )
-            result2 <- getVal( testKey + "b").map( value => value match { case Some(x) => x.toString case None => 0.toString } )
-            result3 <- getVal( testKey + "c").map( value => value match { case Some(x) => x.toString case None => 0.toString } )
-            result4 <- getVal( testKey + "d").map( value => value match { case Some(x) => x.toString case None => 0.toString } )
-          } yield Array(result1, result2, result3, result4)
-
-          //question is how do we deal with the new ogtxn given that the model does not accept it?
-          //for now just pass as the values we will not have in the new contract?
-
-          // we set new values for the key
-          // needs to be changed to be something derived from input!!!!
-          for (x <- keyArray) {
-            setKey(x, "7")
-          }
-
-          // 0 normal txn
-          // 1 channel moto (channel 2, channelchange 1 and threed 0 and threedchange 1 )
-          // 2 remove threed (threed 0 and threedchange 1)
-
-          //so this a oneliner that does all the stuff we do below, but is much less readable. I feel conflicted
-          val comprehensionArray = for (x <- Seq.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, x)))).get.dataset.head.getAs[Double](183)
-          println(comprehensionArray)
-          //KV version
-          val comprehensionArrayKV = keyValArray.map(ls => for (x <- Seq.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRowKV(input, x, ls )))).get.dataset.head.getAs[Double](183) )
-          //val comprehensionArrayKV = for (x <- Seq.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRowKV(input, x, keyValArray2 )))).get.dataset.head.getAs[Double](183)
-
-          comprehensionArrayKV.map(ls =>
-            Ok( Json.toJson(ApiResponse(ls.indexOf(ls.max) )) )
-          )
-          /*
-          //generate the different versions of the Row object
-          val frame = DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, 0)))
-          val frame2 = DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, 1)))
-          val frame3 = DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, 2)))
-
-          val transform = mleapPipeline.transform(frame).get
-          val transform2 = mleapPipeline.transform(frame2).get
-          val transform3 = mleapPipeline.transform(frame3).get
-
-          val result = transform.dataset.head
-          val result2 = transform2.dataset.head
-          val result3 = transform3.dataset.head
-
-          //using index of and max way to determine what to do due to it being both fast and concise
-          val resultArray = List(result.getAs[Double](183), result2.getAs[Double](183), result3.getAs[Double](183) )
-          val testArray = List(result.getAs[Double](183), 0.01, 0.02, 0.03)
-          */
-          /*
-          comprehensionArrayKV.indexOf(comprehensionArrayKV.map(ls => ls.max) ) match {
-            case 0 =>
-              val changes = 0
-              Future ( Json.toJson(ApiResponse(changes)) ).map(ft => Ok(ft))
-               //.as(JSON)
-              //Ok(Json.toJson(ApiResponse(changes))).as(JSON)
-              //Ok( Future( Json.toJson(ApiResponse(changes)) ) ).as(JSON)
-              //Ok(Json.toJson( Future( ApiResponse(changes)  ) )).as(JSON)
-
-            case 1 =>
-              val changes = 1
-              Future ( Json.toJson(ApiResponse(changes)) ).map(ft => Ok(ft))
-            //Ok(Json.toJson(ApiResponse(changes))).as(JSON)
-            //Ok( Future( Json.toJson(ApiResponse(changes)) ) ).as(JSON)
-            //Ok(Json.toJson( Future( ApiResponse(changes)  ) )).as(JSON)
-            case 2 =>
-              val changes = 2
-              Future ( Json.toJson(ApiResponse(changes)) ).map(ft => Ok(ft))
-            //Ok(Json.toJson(ApiResponse(changes))).as(JSON)
-            //Ok( Future( Json.toJson(ApiResponse(changes)) ) ).as(JSON)
-            //Ok(Json.toJson( Future( ApiResponse(changes)  ) )).as(JSON)
-          }
-          */
-        }
-        else {
-          val changes = 0
-          Future ( Json.toJson(ApiResponse(changes)) ).map(ft => Ok(ft))
-          //Ok(Json.toJson(ApiResponse(changes))).as(JSON)
-          //Ok( Future( Json.toJson(ApiResponse(changes)) ) ).as(JSON)
-          //Ok(Json.toJson( Future( ApiResponse(changes)  ) )).as(JSON)
-        }
-
-        //val predictResultVal = result.getAs[Double](183) //getDouble(183) //current model has 183 values, change when we change schema
-
-      //case e : JsError => BadRequest("Errors: " + JsError.toJson(e) ) //.toString())
-      case e : JsError => Future( e ).map(ft => BadRequest("Errors: " + JsError.toJson( ft ) ) )
-      //case JsError(_) => Future("Invalid Input!").map(ft => BadRequest(ft) )
-      //case JsError(_) => BadRequest("Invalid Input!")
-    }
-  }
-*/
 
   def dummyFunction()  : Unit = {
     setKey("ddd", "101")
