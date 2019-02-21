@@ -147,9 +147,11 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
         initFrame.getString(23) //categorycodegroupprevious
       )
 
+      val previousArray = Array("0", "0", "0", "0", "0","0","0","0","0","0" )
+
       //update KV store
       //change arrays to strings to save
-      val valuesArray : Array[String] = previousArrayNew ++ firstArray ++ thereArray ++ changeArray
+      val valuesArray : Array[String] = previousArray ++ firstArray ++ thereArray ++ changeArray
       var setString : String = (previousArrayNew ++ firstArray ++ thereArray ++ changeArray).mkString(",")
 
       //get previous sessionString
@@ -206,99 +208,7 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
         }
       })
 
-      /*
-      val awaited = Await.result(prevSess, 0.5.seconds)
-      if (awaited == "") {
-        trueSetString = sessID + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString
-        //assert(trueSetString != "")
-        setKey("sessions",  trueSetString + "|" + trueSetString)
-      }
-      else {
-        breakable {
-          for (x <- awaited.split("\\|") ) {
-            println("here")
-            println(x)
-            println(x.split(",")(1))
-            //Silent failure ???
-            val parseTime : String = x.split(",")(1)
-            println(parseTime)
-            println("here as well")
-            println(java.time.LocalDateTime.now.isAfter(java.time.LocalDateTime.parse(parseTime, timeForm).plusMinutes(10) ) )
-            if ( java.time.LocalDateTime.now.isAfter(java.time.LocalDateTime.parse(parseTime, timeForm).plusMinutes(10) ) ) {  //timeForm.parse(x.split(",")(1)).plusMinutes(10)  ) {
-              println("here1")
-              //remove the session from string
-              newString = if (newString == "") awaited.split("\\|").drop(1).mkString("\\|") else newString.split("\\|").drop(1).mkString("\\|")
-            }
-            else {
-              println("here2")
-              trueSetString = if (newString == "") awaited + "|" + sessID + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString else newString + "|" + sessID + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString
-              set=1
-              setKey("sessions", trueSetString)
-              break
-            }
-          }
-        }
-      }
-      */
-
       return valuesArray
-
-      //combining side-effects with futures makes me slightly quesy
-      //this logic loop can be refactored!
-      //outer if else, maybe not necessarry in prod, way flow control is done / breakable can we do it faster?
-
-      /*
-      prevSess.map(ps =>
-        if (ps == "") {
-          trueSetString = sessID + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString
-          //assert(trueSetString != "")
-          setKey("sessions",  trueSetString + "|" + trueSetString)
-        }
-        else {
-          breakable {
-            for (x <- ps.split("\\|") ) {
-              println("here")
-              println(x)
-              println(x.split(",")(1))
-              //Silent failure ???
-              val parseTime : String = x.split(",")(1)
-              println(parseTime)
-              println("here as well")
-              println(java.time.LocalDateTime.now.isAfter(java.time.LocalDateTime.parse(parseTime, timeForm).plusMinutes(10) ) )
-              if ( java.time.LocalDateTime.now.isAfter(java.time.LocalDateTime.parse(parseTime, timeForm).plusMinutes(10) ) ) {  //timeForm.parse(x.split(",")(1)).plusMinutes(10)  ) {
-                println("here1")
-                //remove the session from string
-                newString = if (newString == "") ps.split("\\|").drop(1).mkString("\\|") else newString.split("\\|").drop(1).mkString("\\|")
-              }
-              else {
-                println("here2")
-                trueSetString = if (newString == "") ps + "|" + sessID + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString else newString + "|" + sessID + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString
-                set=1
-                setKey("sessions", trueSetString)
-                break
-              }
-            }
-          }
-        }
-      )
-      if (set==0) {
-        println("here33s")
-        setKey("sessions", newString + "|" + sessID + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString )
-      }
-      //so newValuesArray is what you pass to the model(s) and newValueString is what you store in the KV store
-      return valuesArray
-
-      */
-      /*
-      if (trueSetString != "") {
-        return valuesArray
-      }
-      else {
-        Thread.sleep(10000)
-        assert(trueSetString != "")
-        return valuesArray
-      }
-      */
 
     }
     else {
@@ -312,6 +222,94 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
       var newString = ""
       var newValuesArray = Array("")
       var newValueString = ""
+
+      //!!!!!!!!!!!!!!!!!!!
+      //to debate with Joao the time we should wait at maximum
+      //!!!!!!!!!!!!
+      Await.ready(prevSess, 0.5.seconds).onComplete(result => {
+        result match {
+          case Success(value) => {
+            breakable { for (x <- value.split("\\|")) {
+              val parseTime : String = x.split(",")(1)
+              if ( java.time.LocalDateTime.now.isAfter(java.time.LocalDateTime.parse(parseTime, timeForm).plusMinutes(10) ) ) {
+                //remove the session from string
+                newString = if (newString=="") value.split("\\|").drop(1).mkString("\\|") else newString.split("\\|").drop(1).mkString("\\|")
+
+              }
+              else if ( ( sessID == x.split(",")(0) ) ) {
+                //get values
+                var valuesArray = x.split(",").drop(2) //what type is this? // I think array
+                //remove the session from string
+                newString = if (newString=="") value.split("\\|").drop(1).mkString("\\|") else newString.split("\\|").drop(1).mkString("\\|")
+
+                //so we get the values from the previous session that we will pass to create one or two frames
+                //now we need to append a new string to value of session
+                //that contains the data of what we need plus the id and the timestamp
+
+                val firstArray : Array[String] = valuesArray.slice(0,13)
+
+                val thereArray = Array(initFrame.getString(79), //avsthere
+                  if (initFrame.getString(13)=="NULl" || initFrame.getString(13)=="" ) "0" else "1", //cv2there
+                  if (initFrame.getString(52)=="NULL" || initFrame.getString(52)=="" ) "0" else "1", //expthere
+                  if (initFrame.getString(51)=="NULL" || initFrame.getString(51)=="" ) "0" else "1" //threedthere)
+                )
+
+                //current values become previous
+                var previousArrayNew = Array(initFrame.getString(11), //respcodeprevious
+                  initFrame.getString(13), //cv2resultprevious
+                  initFrame.getString(26), //issuerprevious
+                  initFrame.getString(51), //threedprevious
+                  initFrame.getString(15), //channelprevious
+                  initFrame.getString(16), //channelsubtypeprevious
+                  initFrame.getString(62), //transactiontypeidprevious
+                  initFrame.getString(14), //authorizationtypeidprevious
+                  initFrame.getString(22), //processoridprevious
+                  initFrame.getString(23) //categorycodegroupprevious
+                )
+
+                //compare the old with the new
+                //so it is the previous value vs current value taken from the initFrame
+                val changeArray = Array( if (valuesArray(26) == initFrame.getString(82) ) "0" else "1",  //threedtherechange
+                  if (valuesArray(1) == initFrame.getString(13) ) "0" else "1",  //cv2change
+                  ( (System.currentTimeMillis / 1000 ) -  java.time.LocalDateTime.parse(x.split(",")(1), java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")).atZone(ZoneId.systemDefault()).toEpochSecond() ).toString() ,  //authdatesecondsdiff
+                  if (valuesArray(2) == initFrame.getString(26) ) "0" else "1",  //issuerchange
+                  if (valuesArray(3) == initFrame.getString(51) ) "0" else "1",  //threedchange
+                  if (valuesArray(9) == initFrame.getString(23) ) "0" else "1",  //categorycodegroupchange
+                  if (valuesArray(23) == initFrame.getString(79) ) "0" else "1",  //avstherechange
+                  if (valuesArray(7) == initFrame.getString(14) ) "0" else "1",  //authorizationtypeidchange
+                  if (valuesArray(8) == initFrame.getString(22) ) "0" else "1",  //processoridchange
+                  if (valuesArray(4) == initFrame.getString(16) ) "0" else "1",  //channelsubtypechange
+                  if (valuesArray(5) == initFrame.getString(15) ) "0" else "1"  //channelchange
+                )
+
+                //correctly define what we pass to the model, seems okay?
+                newValuesArray = previousArrayNew ++ firstArray ++ thereArray ++ changeArray
+                var setString = (previousArrayNew ++ firstArray ++ thereArray ++ changeArray).mkString(",")
+
+                //now Timestamp
+                val now = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now)
+
+                //create the new value to set
+                newValueString = newString + "|" + sessID + "," + now.toString + "," + setString
+
+                setKey("sessions",  newValueString)
+
+                break
+              }
+              else {
+                //ERROR
+                //should not be accessed not sure what to do?
+              }
+            }
+            }
+          }
+          case Failure(e) => {
+            newValuesArray= Array("1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1")
+
+          }
+        }
+      }
+      )
 
       //oncomplete do not think that works for this one, because we need to pass the array to the model
       //so let us try await !!!!!!!! to discuss the amount of time to wait
@@ -400,6 +398,8 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
 
       //can refactor this !
       //parse string and check if we should pop stuff off
+      //thread.sleep version barf
+      /*
       prevSess.map(ps =>
         breakable { for (x <- ps.split("\\|")) {
           val parseTime : String = x.split(",")(1)
@@ -475,6 +475,9 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
         }
         }
       )
+      */
+
+      /*
       //assert is kept during testing
       assert(newValuesArray != Array("") )
 
@@ -485,9 +488,13 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
         Thread.sleep(10)
         return newValuesArray
       }
+      */
+      return newValuesArray
     }
 
   }
+
+
 
   //func version
   def index(): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request: Request[JsValue] =>
@@ -497,13 +504,12 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
         val sessionID = OriginalTransaction.toRowID(input).getString(1)
         //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         //VERYFY with Jorge that respcode is detailedcode !!!!!!!!!!!!!!!!!!!!!
-        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-        //because of a succesful parse of the api call, we gather data from our KV store
+        //because of a successful parse of the api call, we gather data from our KV store
 
         //generate different candidate transactions here
         //we generate the default transaction if the currentrank is not too high
-        //current implentation assumes a certain schema, if this changes we need to change the code
+        //current implantation assumes a certain schema, if this changes we need to change the code
 
         //the sessionvalues are assumed to be in the following order:
         //respcodeprevious cv2resultprevious issuerprevious  threedprevious  channelprevious channelsubtypeprevious  transactiontypeidprevious authorizationtypeidprevious processoridprevious categorycodegroupprevious channelsubtypefirst processoridfirst  avstherefirst threedtherefirst  respcodefirst firstdate issuerfirst threedfirst channelfirst  transactiontypeidfirst  authorizationtypeidfirst  categorycodegroupfirst  cv2resultfirst  avsthere  cv2there  expthere  threedthere threedtherechange cv2change authdatesecondsdiff issuerchange  threedchange  categorycodegroupchange avstherechange  authorizationtypeidchange processoridchange channelsubtypechange  channelchange
