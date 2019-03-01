@@ -172,27 +172,27 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
         case Success(value) => {
           if (value == "") {
             trueSetString = sessID + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString
-            //assert(trueSetString != "")
-            setKey("sessions", trueSetString + "|" + trueSetString)
+            //setKey("sessions", trueSetString + "|" + trueSetString)
+            setKey("sessions", trueSetString)
           }
           else {
             breakable {
               for (x <- value.split("\\|")) {
-                println("here")
-                println(x)
-                println(x.split(",")(1))
+
 
                 val parseTime: String = x.split(",")(1)
-                println(parseTime)
-                println("here as well")
-                println(java.time.LocalDateTime.now.isAfter(java.time.LocalDateTime.parse(parseTime, timeForm).plusMinutes(10)))
+
                 if (java.time.LocalDateTime.now.isAfter(java.time.LocalDateTime.parse(parseTime, timeForm).plusMinutes(10))) { //timeForm.parse(x.split(",")(1)).plusMinutes(10)  ) {
                   println("here1")
                   //remove the session from string
-                  newString = if (newString == "") value.split("\\|").drop(1).mkString("\\|") else newString.split("\\|").drop(1).mkString("\\|")
+
+                  //doublecheck this later
+                  newString = if (newString == "") value.split("\\|").drop(1).mkString("|") else value.split("\\|").drop(newString.split("\\|").length + 1 ).mkString("|")
+                  println(newString)
                 }
                 else {
                   println("here2")
+                  println(newString)
                   trueSetString = if (newString == "") value + "|" + sessID + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString else newString + "|" + sessID + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString
                   set = 1
                   setKey("sessions", trueSetString)
@@ -200,6 +200,15 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
                 }
               }
             }
+          }
+          //this is a bit clunky
+          //does this work?
+          //!!!!!!!!!!!
+          //think about case all old , new rank 1.0
+          if (trueSetString =="") {
+            trueSetString = sessID + "," + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now).toString + "," + setString
+            //setKey("sessions", trueSetString + "|" + trueSetString)
+            setKey("sessions", trueSetString)
           }
         }
         case Failure(value) => {
@@ -223,8 +232,7 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
       var newValuesArray = Array("")
       var newValueString = ""
 
-      //!!!!!!!!!!!!!!!!!!!
-      //to debate with Joao the time we should wait at maximum
+      //configurable
       //!!!!!!!!!!!!
       Await.ready(prevSess, 0.5.seconds).onComplete(result => {
         result match {
@@ -233,14 +241,26 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
               val parseTime : String = x.split(",")(1)
               if ( java.time.LocalDateTime.now.isAfter(java.time.LocalDateTime.parse(parseTime, timeForm).plusMinutes(10) ) ) {
                 //remove the session from string
-                newString = if (newString=="") value.split("\\|").drop(1).mkString("\\|") else newString.split("\\|").drop(1).mkString("\\|")
+                //!! double check this later
+                newString = if (newString=="") value.split("\\|").drop(1).mkString("|") else value.split("\\|").drop(newString.split("\\|").length + 1 ).mkString("|")
+
+                //!! debating if we should have setkey here or not
+                //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                setKey("sessions", newString)
 
               }
               else if ( ( sessID == x.split(",")(0) ) ) {
                 //get values
                 var valuesArray = x.split(",").drop(2) //what type is this? // I think array
                 //remove the session from string
-                newString = if (newString=="") value.split("\\|").drop(1).mkString("\\|") else newString.split("\\|").drop(1).mkString("\\|")
+
+                //!! double check this
+                //!!!!!!!!!!!!
+                //we need to pop off the correct thing
+                //?? do we need to keep count?????
+                //do we need to even pop stuff off at all?
+                //newString = if (newString=="") value.split("\\|").drop(1).mkString("|") else value.split("\\|").drop(newString.split("\\|").length + 1 ).mkString("|")
+                newString = if (newString=="") value else value.split("\\|").drop(newString.split("\\|").length + 1 ).mkString("|")
 
                 //so we get the values from the previous session that we will pass to create one or two frames
                 //now we need to append a new string to value of session
@@ -251,7 +271,7 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
                 val thereArray = Array(initFrame.getString(79), //avsthere
                   if (initFrame.getString(13)=="NULl" || initFrame.getString(13)=="" ) "0" else "1", //cv2there
                   if (initFrame.getString(52)=="NULL" || initFrame.getString(52)=="" ) "0" else "1", //expthere
-                  if (initFrame.getString(51)=="NULL" || initFrame.getString(51)=="" ) "0" else "1" //threedthere)
+                  if (initFrame.getString(51)=="NULL" || initFrame.getString(51)=="" ) "0" else "1" //threedthere
                 )
 
                 //current values become previous
@@ -560,19 +580,7 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
 
   def healthz() = Action.async {
     //insertKeyz()
-    //setKey("aaa", "400")
-    //dummyFunction()
-    /*
-    getVal("sessions").map(value =>
-    value match {
-      case Some(x) => {
-      dummyFunction()
-    }
-    case None => {
-      dummyFunction()
-    }
-    } )
-    */
+
     getVal("sessions").map(  value =>
       value match {
         case Some(x)   => {
@@ -585,30 +593,5 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
     )
   }
 
-  /*
-  def healthz() = Action.async {
-    //insertKeyz()
-
-    getVal("10001a").map(  value =>
-      value match {
-        case Some(x)   => { //if x != "Future(<not completed>)"
-
-          setKey("10001a" ,(x.toInt + 1).toString )
-          Ok(( x.toInt + 1).toString )
-          //setKey(x + "|")
-          //Ok(x + "|")
-        }
-        case None => {
-          setKey("10001a",0.toString )
-          Ok( 0.toString )
-          //setKey("|")
-          //Ok("|")
-        }
-
-      }
-
-    )
-  }
-  */
 
 }
