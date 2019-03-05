@@ -35,7 +35,7 @@ Containerize:
   - Package
   script:
   - docker pull openjdk:8-alpine
-  - docker build -t dockreg.adam.payvision/${CI_PROJECT_NAME}:latest -t dockreg.adam.payvision/${CI_PROJECT_NAME}:${CI_COMMIT_SHA} .
+  - docker build -t dockreg01.payvision.com/${CI_PROJECT_NAME}:latest -t dockreg01.payvision.com/${CI_PROJECT_NAME}:${CI_COMMIT_SHA} .
   only:
   - master
 
@@ -52,6 +52,18 @@ Publish:
   - echo "Docker container 'dockreg01.payvision.com/${CI_PROJECT_NAME}:${CI_COMMIT_SHA}' has been pushed to Payvision Registry."
   only:
   - master
+
+#Containerize:
+#  stage: containerize
+#  tags:
+#  - docker
+#  dependencies:
+#  - Package
+#  script:
+#  - docker pull openjdk:8-alpine
+#  - docker build -t dockreg.adam.payvision/${CI_PROJECT_NAME}:latest -t dockreg.adam.payvision/${CI_PROJECT_NAME}:${CI_COMMIT_SHA} .
+#  only:
+#  - master
 
 #Publish:
 #  stage: publish
