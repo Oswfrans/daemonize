@@ -6,7 +6,7 @@ import ml.combust.bundle.BundleFile
 import ml.combust.mleap.runtime.MleapSupport._
 import org.scalatestplus.play._
 import org.scalatestplus.play.guice._
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, JsNumber}
 import play.api.test._
 import play.api.test.Helpers._
 import resource._
@@ -42,7 +42,7 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
   private val testJson = Json.obj("Retry" -> Json.obj( "CurrentRank" ->  JsNumber(3.0),
     "PreviousResponseCode" -> "04",
     "PreviousRetryOptimization" -> Json.obj("IsApplicable" -> true, "Optimizations"-> Json.obj("channel" -> "", "removeThreeD" -> "") ) ),
-    "OriginalTransaction" -> Json.obj("RequestCorrelationId" -> "{{$guid}}", "SessionCorrelationId" -> "1111", "TransactionOriginatorId" -> "18", "InternalAmount" -> JsNumber(58.0), "InitialRecurring" - "false"
+    "OriginalTransaction" -> Json.obj("RequestCorrelationId" -> "{{$guid}}", "SessionCorrelationId" -> "1111", "TransactionOriginatorId" -> "18", "InternalAmount" -> JsNumber(58.0), "InitialRecurring" -> "false"
       , "AuthDateTime" -> "2018-11-20T12:21:21Z", "TransactionTypeId" -> "1", "Channel" -> "2", "Eci" -> "4", "CurrencyId" -> "978"
       , "EffectiveValues" -> Json.obj("WalletProvider" -> "1", "AuthorizationType" -> "1", "ChannelType" -> "1", "DwoIndicator" -> "1", "ChannelSubtype" -> "1", "CredentialOnFileType" -> "1"),
     "Card" -> Json.obj("Bin" -> "451233", "ExpiryMonth" -> JsonNumber(11.0), "ExpiryYear" -> JsonNumber(2020.0), "Cv2ResultType" -> "3", "Cv2Response" -> "U", "HolderIp" -> "NULL", "AvsThere" -> "true"
