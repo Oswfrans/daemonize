@@ -69,7 +69,7 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
   //GET test
   //contentAsString(home) must include ("!!!!!!!!!!!!!")
 
-  ///*
+  /*
   "HomeController POST" should {
     "render the index page from a new instance of controller" in {
       val controller = new HomeController(stubControllerComponents(), mleapPipeline)
@@ -98,6 +98,6 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
     }
 
   }
-  //*/
+  */
 
 }
