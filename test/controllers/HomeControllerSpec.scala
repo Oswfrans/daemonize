@@ -45,7 +45,7 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
     "OriginalTransaction" -> Json.obj("RequestCorrelationId" -> "{{$guid}}", "SessionCorrelationId" -> "1111", "TransactionOriginatorId" -> "18", "InternalAmount" -> JsNumber(58.0), "InitialRecurring" -> "false"
       , "AuthDateTime" -> "2018-11-20T12:21:21Z", "TransactionTypeId" -> "1", "Channel" -> "2", "Eci" -> "4", "CurrencyId" -> "978"
       , "EffectiveValues" -> Json.obj("WalletProvider" -> "1", "AuthorizationType" -> "1", "ChannelType" -> "1", "DwoIndicator" -> "1", "ChannelSubtype" -> "1", "CredentialOnFileType" -> "1"),
-    "Card" -> Json.obj("Bin" -> "451233", "ExpiryMonth" -> JsonNumber(11.0), "ExpiryYear" -> JsonNumber(2020.0), "Cv2ResultType" -> "3", "Cv2Response" -> "U", "HolderIp" -> "NULL", "AvsThere" -> "true"
+    "Card" -> Json.obj("Bin" -> "451233", "ExpiryMonth" -> JsNumber(11.0), "ExpiryYear" -> JsNumber(2020.0), "Cv2ResultType" -> "3", "Cv2Response" -> "U", "HolderIp" -> "NULL", "AvsThere" -> "true"
     , "BinDetail" -> Json.obj("CardBrand" -> "1", "CardSubtypeId" -> "1", "CardCommercial" -> "true", "CardPrepaid" -> "true", "IssuerCode" -> "978", "IssuerCountryCode" -> "840", "IssuerTypeId" -> "1")
       , "BinInfo" -> Json.obj("CardSchemaId" -> "2", "ServiceTypeId" -> "1", "IssuerCode" -> "400555", "CountryCode" -> "840", "ProductCode" -> "F", "ProductSubCode" -> "", "IsCommercial" -> "false"
       , "IsPrivateLabel" -> "false", "BrandCode" -> "005", "IsPrepaid" -> "false")  ),
