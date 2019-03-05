@@ -120,15 +120,15 @@ object OriginalTransaction {
       (JsPath \ "Retry" \ "CurrentRank").format[Double] and
         (JsPath \ "Retry" \ "PreviousResponseCode").format[String] and
 
-        (JsPath \ "EffectiveValues" \ "AuthorizationType").format[String] and
-        (JsPath \ "EffectiveValues" \ "Channeltype").format[String] and
-        (JsPath \ "EffectiveValues" \ "ChannelSubtype").format[String] and
+        (JsPath \ "OriginalTransaction" \ "EffectiveValues" \ "AuthorizationType").format[String] and
+        (JsPath \ "OriginalTransaction" \ "EffectiveValues" \ "ChannelType").format[String] and
+        (JsPath \ "OriginalTransaction" \ "EffectiveValues" \ "ChannelSubtype").format[String] and
 
         (JsPath \ "OriginalTransaction" \ "TransactionOriginatorId").format[String] and
 
-        (JsPath \ "EffectiveValues" \ "CredentialOnFileType").format[String] and
-        (JsPath \ "EffectiveValues" \ "DwoIndicator").format[String] and
-        (JsPath \ "EffectiveValues" \ "WalletProvider").format[String] and
+        (JsPath \ "OriginalTransaction" \ "EffectiveValues" \ "CredentialOnFileType").format[String] and
+        (JsPath \ "OriginalTransaction" \ "EffectiveValues" \ "DwoIndicator").format[String] and
+        (JsPath \ "OriginalTransaction" \ "EffectiveValues" \ "WalletProvider").format[String] and
 
         (JsPath \ "Retry" \ "PreviousRetryOptimization" \ "Optimizations" \ "channel").formatNullable[String].inmap[String](_.getOrElse(""), Some(_)) and //.format[String]  or Formats.pure("")  and  //need to think what to do if this is not here?
         (JsPath \ "Retry" \ "PreviousRetryOptimization" \ "Optimizations" \ "removeThreeD").formatNullable[String].inmap[String](_.getOrElse(""), Some(_)) and //.format[String] or Formats.pure("") and //need to think what to do if this is not here?

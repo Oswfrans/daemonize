@@ -36,17 +36,40 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
   private val mleapPipeline = zipBundleM.root
 
   //will need to expand and update these tests
-  private val testJson = Json.obj("Retry" -> Json.obj( "CurrentRank" ->  JsNumber(3.0) )
+
+  //create proper testJsons (multiple)!
+
+  private val testJson = Json.obj("Retry" -> Json.obj( "CurrentRank" ->  JsNumber(3.0),
+    "PreviousResponseCode" -> "04",
+    "PreviousRetryOptimization" -> Json.obj("IsApplicable" -> true, "Optimizations"-> Json.obj("channel" -> "", "removeThreeD" -> "") ) ),
+    "OriginalTransaction" -> Json.obj("RequestCorrelationId" -> "{{$guid}}", "SessionCorrelationId" -> "1111", "TransactionOriginatorId" -> "18", "InternalAmount" -> JsNumber(58.0), "InitialRecurring" - "false"
+      , "AuthDateTime" -> "2018-11-20T12:21:21Z", "TransactionTypeId" -> "1", "Channel" -> "2", "Eci" -> "4", "CurrencyId" -> "978"
+      , "EffectiveValues" -> Json.obj("WalletProvider" -> "1", "AuthorizationType" -> "1", "ChannelType" -> "1", "DwoIndicator" -> "1", "ChannelSubtype": "1", "CredentialOnFileType" : "1"),
+    "Card" -> Json.obj("Bin" -> "451233", "ExpiryMonth" -> JsonNumber(11.0), "ExpiryYear" -> JsonNumber(2020.0), "Cv2ResultType" -> "3", "Cv2Response" -> "U", "HolderIp" -> "NULL", "AvsThere" -> "true"
+    , "BinDetail" -> Json.obj("CardBrand" -> "1", "CardSubtypeId" -> "1", "CardCommercial" -> "true", "CardPrepaid" -> "true", "IssuerCode" -> "978", "IssuerCountryCode" -> "840", "IssuerTypeId" -> "1")
+      , "BinInfo" -> Json.obj("CardSchemaId" -> "2", "ServiceTypeId" -> "1", "IssuerCode" -> "400555", "CountryCode" -> "840", "ProductCode" -> "F", "ProductSubCode" -> "", "IsCommercial" -> "false"
+      , "IsPrivateLabel" -> "false", "BrandCode" -> "005", "IsPrepaid" -> "false")  ),
+    "Merchant" -> Json.obj("CountryCode" -> "840", "ProcessorId" -> "12", "CategoryCodeGroup" -> "7995", "MemberId" -> "12345", "Ip" -> "192.168.0.1")
+  )
+  )
     //"OriginalTransaction" -> "InternalAmount" -> 55.0,
     //"OriginalTransaction" -> "Card" -> "AvsThere" -> "true",
     //"OriginalTransaction" -> "Card" -> "BinInfo" -> "IsCommercial" -> "true",
     //  "OriginalTransaction" -> "Merchant" ->  "CategoryCodeGroup" -> "7995"
-  )
   //Json.obj("firstsixdigits" -> "123456", "cvvresponse" -> "123", "internalamount" -> 456, "mid" -> "7900" )
 
   @transient private val request = FakeRequest(POST, "/").withBody(testJson)
 
-  /*
+  //create a fake request that will get the session string
+  @transient private val healthRequest = FakeRequest(GET, "/healthz")
+
+  //POST test maybe just what Ramin did
+
+
+  //GET test
+  //contentAsString(home) must include ("!!!!!!!!!!!!!")
+
+  ///*
   "HomeController POST" should {
     "render the index page from a new instance of controller" in {
       val controller = new HomeController(stubControllerComponents(), mleapPipeline)
@@ -75,5 +98,6 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
     }
 
   }
-  */
+  //*/
+
 }

@@ -21,8 +21,6 @@ import scala.concurrent.duration._
 import scala.concurrent.Future
 
 import java.time._
-//import java.time.{LocalDateTime, ZoneId }
-//import java.time.format.DateTimeFormatter._
 import scala.util.control.Breaks._
 import scala.collection.JavaConverters._
 
@@ -164,9 +162,6 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
       var trueSetString = ""
       var set=0
 
-      //so await vs oncomplete
-      //in principal we could do oncomplete?
-      //lets test it
 
       prevSess.onComplete({
         case Success(value) => {
@@ -202,7 +197,6 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
             }
           }
           //this is a bit clunky
-          //does this work?
           //!!!!!!!!!!!
           //think about case all old , new rank 1.0
           if (trueSetString =="") {
@@ -259,7 +253,6 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
                 //we need to pop off the correct thing
                 //?? do we need to keep count?????
                 //do we need to even pop stuff off at all?
-                //newString = if (newString=="") value.split("\\|").drop(1).mkString("|") else value.split("\\|").drop(newString.split("\\|").length + 1 ).mkString("|")
                 newString = if (newString=="") value else value.split("\\|").drop(newString.split("\\|").length + 1 ).mkString("|")
 
                 //so we get the values from the previous session that we will pass to create one or two frames
@@ -331,184 +324,6 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
       }
       )
 
-      //oncomplete do not think that works for this one, because we need to pass the array to the model
-      //so let us try await !!!!!!!! to discuss the amount of time to wait
-      //current setup is kinda like await hmm
-
-      //see below await setup, to discuss with Joao if we should do await or the thread sleep if needed
-      /*
-      val awaited = Await.result(prevSess, 0.5.seconds)
-      breakable { for (x <- awaited.split("\\|")) {
-        val parseTime : String = x.split(",")(1)
-        if ( java.time.LocalDateTime.now.isAfter(java.time.LocalDateTime.parse(parseTime, timeForm).plusMinutes(10) ) ) {
-          //remove the session from string
-          newString = if (newString=="") awaited.split("\\|").drop(1).mkString("\\|") else newString.split("\\|").drop(1).mkString("\\|")
-
-        }
-        else if ( ( sessID == x.split(",")(0) ) ) {
-          //get values
-          var valuesArray = x.split(",").drop(2) //what type is this? // I think array
-          //remove the session from string
-          newString = if (newString=="") awaited.split("\\|").drop(1).mkString("\\|") else newString.split("\\|").drop(1).mkString("\\|")
-
-          //so we get the values from the previous session that we will pass to create one or two frames
-          //now we need to append a new string to value of session
-          //that contains the data of what we need plus the id and the timestamp
-
-          val firstArray : Array[String] = valuesArray.slice(0,13)
-
-          val thereArray = Array(initFrame.getString(79), //avsthere
-            if (initFrame.getString(13)=="NULl" || initFrame.getString(13)=="" ) "0" else "1", //cv2there
-            if (initFrame.getString(52)=="NULL" || initFrame.getString(52)=="" ) "0" else "1", //expthere
-            if (initFrame.getString(51)=="NULL" || initFrame.getString(51)=="" ) "0" else "1" //threedthere)
-          )
-
-          //current values become previous
-          var previousArrayNew = Array(initFrame.getString(11), //respcodeprevious
-            initFrame.getString(13), //cv2resultprevious
-            initFrame.getString(26), //issuerprevious
-            initFrame.getString(51), //threedprevious
-            initFrame.getString(15), //channelprevious
-            initFrame.getString(16), //channelsubtypeprevious
-            initFrame.getString(62), //transactiontypeidprevious
-            initFrame.getString(14), //authorizationtypeidprevious
-            initFrame.getString(22), //processoridprevious
-            initFrame.getString(23) //categorycodegroupprevious
-          )
-
-          //compare the old with the new
-          //so it is the previous value vs current value taken from the initFrame
-          val changeArray = Array( if (valuesArray(26) == initFrame.getString(82) ) "0" else "1",  //threedtherechange
-            if (valuesArray(1) == initFrame.getString(13) ) "0" else "1",  //cv2change
-            ( (System.currentTimeMillis / 1000 ) -  java.time.LocalDateTime.parse(x.split(",")(1), java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")).atZone(ZoneId.systemDefault()).toEpochSecond() ).toString() ,  //authdatesecondsdiff
-            if (valuesArray(2) == initFrame.getString(26) ) "0" else "1",  //issuerchange
-            if (valuesArray(3) == initFrame.getString(51) ) "0" else "1",  //threedchange
-            if (valuesArray(9) == initFrame.getString(23) ) "0" else "1",  //categorycodegroupchange
-            if (valuesArray(23) == initFrame.getString(79) ) "0" else "1",  //avstherechange
-            if (valuesArray(7) == initFrame.getString(14) ) "0" else "1",  //authorizationtypeidchange
-            if (valuesArray(8) == initFrame.getString(22) ) "0" else "1",  //processoridchange
-            if (valuesArray(4) == initFrame.getString(16) ) "0" else "1",  //channelsubtypechange
-            if (valuesArray(5) == initFrame.getString(15) ) "0" else "1"  //channelchange
-          )
-
-          //correctly define what we pass to the model, seems okay?
-          newValuesArray = previousArrayNew ++ firstArray ++ thereArray ++ changeArray
-          var setString = (previousArrayNew ++ firstArray ++ thereArray ++ changeArray).mkString(",")
-
-          //now Timestamp
-          val now = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now)
-
-          //create the new value to set
-          newValueString = newString + "|" + sessID + "," + now.toString + "," + setString
-
-          setKey("sessions",  newValueString)
-
-          break
-        }
-        else {
-          //ERROR
-          //should not be accessed not sure what to do?
-        }
-      }
-      }
-      */
-
-      //we need to break if we find a match that is not too late
-      //bit ugly, but alternatives are meh https://stackoverflow.com/questions/2742719/how-do-i-break-out-of-a-loop-in-scala
-
-      //can refactor this !
-      //parse string and check if we should pop stuff off
-      //thread.sleep version barf
-      /*
-      prevSess.map(ps =>
-        breakable { for (x <- ps.split("\\|")) {
-          val parseTime : String = x.split(",")(1)
-          if ( java.time.LocalDateTime.now.isAfter(java.time.LocalDateTime.parse(parseTime, timeForm).plusMinutes(10) ) ) {
-            //remove the session from string
-            newString = if (newString=="") ps.split("\\|").drop(1).mkString("\\|") else newString.split("\\|").drop(1).mkString("\\|")
-
-          }
-          else if ( ( sessID == x.split(",")(0) ) ) {
-            //get values
-            var valuesArray = x.split(",").drop(2) //what type is this? // I think array
-            //remove the session from string
-            newString = if (newString=="") ps.split("\\|").drop(1).mkString("\\|") else newString.split("\\|").drop(1).mkString("\\|")
-
-            //so we get the values from the previous session that we will pass to create one or two frames
-            //now we need to append a new string to value of session
-            //that contains the data of what we need plus the id and the timestamp
-
-            val firstArray : Array[String] = valuesArray.slice(0,13)
-
-            val thereArray = Array(initFrame.getString(79), //avsthere
-              if (initFrame.getString(13)=="NULl" || initFrame.getString(13)=="" ) "0" else "1", //cv2there
-              if (initFrame.getString(52)=="NULL" || initFrame.getString(52)=="" ) "0" else "1", //expthere
-              if (initFrame.getString(51)=="NULL" || initFrame.getString(51)=="" ) "0" else "1" //threedthere)
-            )
-
-            //current values become previous
-            var previousArrayNew = Array(initFrame.getString(11), //respcodeprevious
-              initFrame.getString(13), //cv2resultprevious
-              initFrame.getString(26), //issuerprevious
-              initFrame.getString(51), //threedprevious
-              initFrame.getString(15), //channelprevious
-              initFrame.getString(16), //channelsubtypeprevious
-              initFrame.getString(62), //transactiontypeidprevious
-              initFrame.getString(14), //authorizationtypeidprevious
-              initFrame.getString(22), //processoridprevious
-              initFrame.getString(23) //categorycodegroupprevious
-            )
-
-            //compare the old with the new
-            //so it is the previous value vs current value taken from the initFrame
-            val changeArray = Array( if (valuesArray(26) == initFrame.getString(82) ) "0" else "1",  //threedtherechange
-              if (valuesArray(1) == initFrame.getString(13) ) "0" else "1",  //cv2change
-              ( (System.currentTimeMillis / 1000 ) -  java.time.LocalDateTime.parse(x.split(",")(1), java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")).atZone(ZoneId.systemDefault()).toEpochSecond() ).toString() ,  //authdatesecondsdiff
-              if (valuesArray(2) == initFrame.getString(26) ) "0" else "1",  //issuerchange
-              if (valuesArray(3) == initFrame.getString(51) ) "0" else "1",  //threedchange
-              if (valuesArray(9) == initFrame.getString(23) ) "0" else "1",  //categorycodegroupchange
-              if (valuesArray(23) == initFrame.getString(79) ) "0" else "1",  //avstherechange
-              if (valuesArray(7) == initFrame.getString(14) ) "0" else "1",  //authorizationtypeidchange
-              if (valuesArray(8) == initFrame.getString(22) ) "0" else "1",  //processoridchange
-              if (valuesArray(4) == initFrame.getString(16) ) "0" else "1",  //channelsubtypechange
-              if (valuesArray(5) == initFrame.getString(15) ) "0" else "1"  //channelchange
-            )
-
-            //correctly define what we pass to the model, seems okay?
-            newValuesArray = previousArrayNew ++ firstArray ++ thereArray ++ changeArray
-            var setString = (previousArrayNew ++ firstArray ++ thereArray ++ changeArray).mkString(",")
-
-            //now Timestamp
-            val now = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now)
-
-            //create the new value to set
-            newValueString = newString + "|" + sessID + "," + now.toString + "," + setString
-
-            setKey("sessions",  newValueString)
-
-            break
-          }
-          else {
-            //ERROR
-            //should not be accessed not sure what to do?
-          }
-        }
-        }
-      )
-      */
-
-      /*
-      //assert is kept during testing
-      assert(newValuesArray != Array("") )
-
-      if (newValuesArray != Array("") ) {
-        return newValuesArray
-      }
-      else {
-        Thread.sleep(10)
-        return newValuesArray
-      }
-      */
       return newValuesArray
     }
 
@@ -543,6 +358,7 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
 
         //need to create intermediate df object to not recompute everything
         val initFrame = OriginalTransaction.toRow(input, 0, sessionValuesDefault, kvArrayDefault)
+        println(initFrame.getDouble(55))
 
         if ( initFrame.getDouble(55) < 3.0 ) {
 
@@ -565,6 +381,7 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
 
         }
         else {
+          println("hmmmm")
           val changes = 0
           Future ( Json.toJson(ApiResponse(changes)) ).map(ft => Ok(ft))
         }
