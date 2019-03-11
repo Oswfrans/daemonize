@@ -48,7 +48,7 @@ Publish:
   script:
   - docker login -u ${DOCKERREG_USERNAME} -p ${DOCKERREG_PASSWORD} dockreg01.payvision.com
   - docker push dockreg01.payvision.com/${CI_PROJECT_NAME}:latest
-  - docker docker push dockreg01.payvision.com/${CI_PROJECT_NAME}:${CI_COMMIT_SHA}
+  - docker push dockreg01.payvision.com/${CI_PROJECT_NAME}:${CI_COMMIT_SHA}
   - echo "Docker container 'dockreg01.payvision.com/${CI_PROJECT_NAME}:${CI_COMMIT_SHA}' has been pushed to Payvision Registry."
   only:
   - master
