@@ -37,7 +37,8 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
   //ugh, consider rewriting the lib? Joao would hate it lol
   def getVal( valKey: String) : Future[Option[ String ] ] = {
        val config = Etcd4sClientConfig(
-      address = "127.0.0.1",
+       address = "http://example-etcd-cluster-client"
+         //address = "127.0.0.1",
       port = 2379
     )
     val client = Etcd4sClient.newClient(config)
@@ -48,7 +49,8 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
 
   def setKey(valKey: String, valSet: String) : Unit = {
     val config = Etcd4sClientConfig(
-      address = "127.0.0.1",
+      address = "http://example-etcd-cluster-client"
+      //address = "127.0.0.1",
       port = 2379
     )
     val client = Etcd4sClient.newClient(config)
