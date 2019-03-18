@@ -18,10 +18,7 @@ object ApiResponse {
     )(unlift(ApiResponse.unapply))
 
   def apply(indicator: Int): ApiResponse = {
-    //val continue = true
-    //val mmcCode = row.getString(21)
-    //val probability = row.getTensor[Double](182).rawValues.head
-    //val prediction = row.getDouble(183)
+
 
     indicator match {
       case 0 =>
@@ -33,8 +30,7 @@ object ApiResponse {
       case 2 =>
         new ApiResponse(true, "1", "true" )
 
-      //case 3 =>
-      //  new ApiResponse(true, "2", "true")
+
     }
 
   }
