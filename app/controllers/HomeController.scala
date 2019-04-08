@@ -379,8 +379,13 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
 
         //val comprehensionArray : scala.concurrent.Future[List[Double]] = if (fraudCheck ==1) kvArray.map(ls => for (x <- List.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, x, iterArray,ls  ) ) ) ).get.dataset.head.getAs[Double](183) ) else scala.concurrent.Future( for (x <- List.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, x, iterArray, kvArrayDefault ) ) ) ).get.dataset.head.getAs[Double](183) )
 
-
-        Ok( Json.toJson(ApiResponse( fraudScore ) ) )
+        //very hacky for now
+        Future(fraudScore.toString ) . map {
+          case _ => {
+            Ok(Json.toJson(ApiResponse( fraudScore.toString ) ) )
+          }
+        }
+        //Ok( Json.toJson(ApiResponse( fraudScore.toString ) ) )
 
 
       case e : JsError => Future( e ).map(ft => BadRequest("Errors: " + JsError.toJson( ft ) ) )
