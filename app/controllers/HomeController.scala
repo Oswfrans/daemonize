@@ -2,7 +2,7 @@ package controllers
 
 import javax.inject._
 import ml.combust.mleap.runtime.frame.{DefaultLeapFrame, Transformer}
-import models.{ApiResponse, OriginalTransaction, ModifiedTransaction}
+import models.{ApiResponse,  CheckTransaction} //OriginalTransaction, ModifiedTransaction}
 import play.api.libs.json._
 import play.api.mvc._
 
@@ -354,10 +354,10 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
 
   //func version
   def index(): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request: Request[JsValue] =>
-    request.body.validate[OriginalTransaction] match {
-      case success: JsSuccess[OriginalTransaction] =>
+    request.body.validate[CheckTransaction] match {
+      case success: JsSuccess[CheckTransaction] =>
         val input = success.value
-        val sessionID = OriginalTransaction.toRowID(input).getString(1)
+        val sessionID = CheckTransaction.toRowID(input).getString(1)
 
 
         //38 values
@@ -367,18 +367,20 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
         //val kvArrayDefault = Array("1", "1", "1", "1")
 
         //need to create intermediate df object to not recompute everything
-        val initFrame = OriginalTransaction.toRow(input, sessionValuesDefault)
+        // will need to update toRow method
+        val initFrame = CheckTransaction.toRow(input,0, sessionValuesDefault)
 
         //so here we compute the computed values that are needed
-        val iterArray = renameLater(initFrame)
+        //for now we outcomment it
+        //val iterArray = renameLater(initFrame)
 
-        val fraudScore = mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, iterArray  ) ) ) ).get.dataset.head.getAs[Double](183)
+        //will need to update toRow method
+        val fraudScore = mleapPipeline.transform(DefaultLeapFrame(CheckTransaction.schema, Seq(CheckTransaction.toRow(input, 0, sessionValuesDefault  ) ) ) ).get.dataset.head.getAs[Double](183)
 
         //val comprehensionArray : scala.concurrent.Future[List[Double]] = if (fraudCheck ==1) kvArray.map(ls => for (x <- List.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, x, iterArray,ls  ) ) ) ).get.dataset.head.getAs[Double](183) ) else scala.concurrent.Future( for (x <- List.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, x, iterArray, kvArrayDefault ) ) ) ).get.dataset.head.getAs[Double](183) )
 
-          fraudScore.map(ls =>
-            Ok( Json.toJson(ApiResponse( ls )) )
-          )
+
+        Ok( Json.toJson(ApiResponse( fraudScore ) ) )
 
 
       case e : JsError => Future( e ).map(ft => BadRequest("Errors: " + JsError.toJson( ft ) ) )
@@ -386,8 +388,15 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
   }
 
   def healthz() = Action.async {
+    Future("Healthy").map {
+      case _ => {
+        Ok("Healthy")
+      }
+    }
+
     //insertKeyz()
 
+    /*
     getVal("sessions").map(  value =>
       value match {
         case Some(x)   => {
@@ -398,6 +407,7 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
         }
       }
     )
+    */
   }
 
 

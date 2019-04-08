@@ -271,7 +271,7 @@ object CheckTransaction {
   //will need to properly deal with this in the homecontroller
   //dropping the values or passing it to another model etc.
 
-  def toRow(origTrx: CheckTransaction, frameType: Int , sessionValues: Array[String]  , kvArray: Array[String] ): Row = {
+  def toRow(origTrx: CheckTransaction, frameType: Int , sessionValues: Array[String] ) : Row = { //}  , kvArray: Array[String] ): Row = {
     var ogRowSeq = Seq("1", // approvalcode
       origTrx.info.currencyid, // originalcurrencyid
       origTrx.info.internalamount, // internalamount

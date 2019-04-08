@@ -5,21 +5,26 @@ import play.api.libs.json._
 import play.api.libs.functional.syntax._
 
 //case class Optimization()
-case class ApiResponse(IsApplicable: Boolean, channel: String, removeThreed : String)
+//case class ApiResponse(IsApplicable: Boolean, channel: String, removeThreed : String)
+case class ApiResponse(IsApplicable: Boolean, Score: String)
 // Optimizations: Seq[Optimization] )
+
+//remember to change color scheme
 
 object ApiResponse {
 
   implicit val outputWrites: Writes[ApiResponse] = (
     (JsPath \ "IsApplicable").write[Boolean] and
-      //(JsPath \ "IsApplicable").write[Boolean]
-    (JsPath \ "Optimizations" \ "channel").write[String] and
-    (JsPath \ "Optimizations" \ "removeThreed").write[String]
+      (JsPath \ "Score").write[String]
+    //(JsPath \ "Optimizations" \ "channel").write[String] and
+    //(JsPath \ "Optimizations" \ "removeThreed").write[String]
     )(unlift(ApiResponse.unapply))
 
-  def apply(indicator: Int): ApiResponse = {
+  def apply(indicator: String): ApiResponse = {
 
+    new ApiResponse(true, indicator)
 
+    /*
     indicator match {
       case 0 =>
         new ApiResponse(true, "","")
@@ -30,9 +35,8 @@ object ApiResponse {
       case 2 =>
         new ApiResponse(true, "1", "true" )
 
-
     }
-
+     */
   }
 }
 
