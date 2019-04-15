@@ -2,7 +2,7 @@ package controllers
 
 import javax.inject._
 import ml.combust.mleap.runtime.frame.{DefaultLeapFrame, Transformer}
-import models.{ApiResponse, OriginalTransaction, ModifiedTransaction}
+import models.{ApiResponse,  CheckTransaction} //OriginalTransaction, ModifiedTransaction}
 import play.api.libs.json._
 import play.api.mvc._
 
@@ -30,6 +30,26 @@ import ml.combust.mleap.runtime.frame.Row
  * This controller creates an `Action` to handle HTTP requests to the
  * application's home page.
  */
+
+//get transaction
+//parse transaction
+//create default array
+
+//get values from KV store
+//compute values
+
+// !! we are here we need to
+//  [] change renameLater
+//  [] adept CheckTransaction toRow method
+
+//pass object to model as leapframe
+//pass result in object to
+// [] change ApiResponse method
+
+// [] remove retry cruft
+// [] adept schema fully to fraud model
+// [] protobuf ??
+
 @Singleton
 class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transformer) extends AbstractController(cc) {
 
@@ -332,74 +352,56 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
   }
 
 
-
   //func version
   def index(): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request: Request[JsValue] =>
-    request.body.validate[OriginalTransaction] match {
-      case success: JsSuccess[OriginalTransaction] =>
+    request.body.validate[CheckTransaction] match {
+      case success: JsSuccess[CheckTransaction] =>
         val input = success.value
-        val sessionID = OriginalTransaction.toRowID(input).getString(1)
-        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        //VERYFY with Jorge that respcode is detailedcode !!!!!!!!!!!!!!!!!!!!!
+        val sessionID = CheckTransaction.toRowID(input).getString(1)
 
-        //because of a successful parse of the api call, we gather data from our KV store
-
-        //generate different candidate transactions here
-        //we generate the default transaction if the currentrank is not too high
-        //current implantation assumes a certain schema, if this changes we need to change the code
-
-        //the sessionvalues are assumed to be in the following order:
-        //respcodeprevious cv2resultprevious issuerprevious  threedprevious  channelprevious channelsubtypeprevious  transactiontypeidprevious authorizationtypeidprevious processoridprevious categorycodegroupprevious channelsubtypefirst processoridfirst  avstherefirst threedtherefirst  respcodefirst firstdate issuerfirst threedfirst channelfirst  transactiontypeidfirst  authorizationtypeidfirst  categorycodegroupfirst  cv2resultfirst  avsthere  cv2there  expthere  threedthere threedtherechange cv2change authdatesecondsdiff issuerchange  threedchange  categorycodegroupchange avstherechange  authorizationtypeidchange processoridchange channelsubtypechange  channelchange
-
-        val fraudCheck = 0
 
         //38 values
         //because implicit vals are hard
+        //rename this
         val sessionValuesDefault = Array("1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1")
-        val kvArrayDefault = Array("1", "1", "1", "1")
+        //val kvArrayDefault = Array("1", "1", "1", "1")
 
         //need to create intermediate df object to not recompute everything
-        val initFrame = OriginalTransaction.toRow(input, 0, sessionValuesDefault, kvArrayDefault)
-        println(initFrame.getDouble(55))
+        // will need to update toRow method
+        val initFrame = CheckTransaction.toRow(input,0, sessionValuesDefault)
 
-        if ( initFrame.getDouble(55) < 3.0 ) {
+        //so here we compute the computed values that are needed
+        //for now we outcomment it
+        //val iterArray = renameLater(initFrame)
 
-          // 0 normal txn
-          // 1 channel moto (channel 2, channelchange 1 and threed 0 and threedchange 1 )
-          // 2 remove threed (threed 0 and threedchange 1)
+        //will need to update toRow method
+        val fraudScore = mleapPipeline.transform(DefaultLeapFrame(CheckTransaction.schema, Seq(CheckTransaction.toRow(input, 0, sessionValuesDefault  ) ) ) ).get.dataset.head.getAs[Double](183)
 
-          //function version
-          val kvArray = kvFunction(fraudCheck)
-          val iterArray = renameLater(initFrame, sessionID)
+        //val comprehensionArray : scala.concurrent.Future[List[Double]] = if (fraudCheck ==1) kvArray.map(ls => for (x <- List.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, x, iterArray,ls  ) ) ) ).get.dataset.head.getAs[Double](183) ) else scala.concurrent.Future( for (x <- List.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, x, iterArray, kvArrayDefault ) ) ) ).get.dataset.head.getAs[Double](183) )
 
-          val comprehensionArray : scala.concurrent.Future[List[Double]] = if (fraudCheck ==1) kvArray.map(ls => for (x <- List.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, x, iterArray,ls  ) ) ) ).get.dataset.head.getAs[Double](183) ) else scala.concurrent.Future( for (x <- List.range(0,3) ) yield mleapPipeline.transform(DefaultLeapFrame(OriginalTransaction.schema, Seq(OriginalTransaction.toRow(input, x, iterArray, kvArrayDefault ) ) ) ).get.dataset.head.getAs[Double](183) )
-
-          //if we do two models this will need to be adapted in the future
-
-          comprehensionArray.map(ls =>
-            //ls.foreach(println)
-            Ok( Json.toJson(ApiResponse( (ls).indexOf((ls).max) )) )
-          )
-
+        //very hacky for now
+        Future(fraudScore.toString ) . map {
+          case _ => {
+            Ok(Json.toJson(ApiResponse( fraudScore.toString ) ) )
+          }
         }
-        else {
-          println("hmmmm")
-          val changes = 0
-          Future ( Json.toJson(ApiResponse(changes)) ).map(ft => Ok(ft))
-        }
+        //Ok( Json.toJson(ApiResponse( fraudScore.toString ) ) )
+
 
       case e : JsError => Future( e ).map(ft => BadRequest("Errors: " + JsError.toJson( ft ) ) )
     }
   }
 
-
-  def dummyFunction()  : Unit = {
-    setKey("ddd", "101")
-  }
-
   def healthz() = Action.async {
+    Future("Healthy").map {
+      case _ => {
+        Ok("Healthy")
+      }
+    }
+
     //insertKeyz()
 
+    /*
     getVal("sessions").map(  value =>
       value match {
         case Some(x)   => {
@@ -410,6 +412,7 @@ class HomeController @Inject()(cc: ControllerComponents, mleapPipeline: Transfor
         }
       }
     )
+    */
   }
 
 
